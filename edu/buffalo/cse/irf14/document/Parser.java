@@ -67,7 +67,6 @@ public class Parser {
 		} finally {
 			try {
 				reader.close();
-//				writer.close();
 			} catch (IOException e) {
 				System.err.println(e);
 			}
