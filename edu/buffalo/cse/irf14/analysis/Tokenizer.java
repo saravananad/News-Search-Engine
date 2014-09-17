@@ -3,6 +3,13 @@
  */
 package edu.buffalo.cse.irf14.analysis;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import edu.buffalo.cse.irf14.index.IndexWriter;
+
 /**
  * @author nikhillo
  * Class that converts a given string into a {@link TokenStream} instance
@@ -11,10 +18,11 @@ public class Tokenizer {
 	/**
 	 * Default constructor. Assumes tokens are whitespace delimited
 	 */
+
 	public Tokenizer() {
 		//TODO : YOU MUST IMPLEMENT THIS METHOD
 	}
-	
+
 	/**
 	 * Overloaded constructor. Creates the tokenizer with the given delimiter
 	 * @param delim : The delimiter to be used
@@ -22,7 +30,7 @@ public class Tokenizer {
 	public Tokenizer(String delim) {
 		//TODO : YOU MUST IMPLEMENT THIS METHOD
 	}
-	
+
 	/**
 	 * Method to convert the given string into a TokenStream instance.
 	 * This must only break it into tokens and initialize the stream.
@@ -38,7 +46,20 @@ public class Tokenizer {
 	 * tokenization
 	 */
 	public TokenStream consume(String str) throws TokenizerException {
-		//TODO : YOU MUST IMPLEMENT THIS METHOD
+		if(IndexWriter.isValidString(str)) {
+			String[] tokenStringArray = str.split("\\s");
+			if(tokenStringArray != null) {
+				TokenStream tokenStream = new TokenStream();
+				for(String currentTokenString : tokenStringArray) {
+					if(IndexWriter.isValidString(currentTokenString)) {
+						currentTokenString = currentTokenString.trim();
+						Token token = new Token(currentTokenString);
+						tokenStream.add(token);
+					}
+				}
+				return tokenStream;
+			}
+		}
 		return null;
 	}
 }

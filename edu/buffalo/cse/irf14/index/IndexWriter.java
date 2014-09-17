@@ -3,7 +3,17 @@
  */
 package edu.buffalo.cse.irf14.index;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import edu.buffalo.cse.irf14.analysis.TokenStream;
+import edu.buffalo.cse.irf14.analysis.Tokenizer;
+import edu.buffalo.cse.irf14.analysis.TokenizerException;
 import edu.buffalo.cse.irf14.document.Document;
+import edu.buffalo.cse.irf14.document.FieldNames;
+import edu.buffalo.cse.irf14.index.IndexerException;
 
 /**
  * @author nikhillo
@@ -17,7 +27,7 @@ public class IndexWriter {
 	public IndexWriter(String indexDir) {
 		//TODO : YOU MUST IMPLEMENT THIS
 	}
-	
+
 	/**
 	 * Method to add the given Document to the index
 	 * This method should take care of reading the filed values, passing
@@ -26,10 +36,25 @@ public class IndexWriter {
 	 * @param d : The Document to be added
 	 * @throws IndexerException : In case any error occurs
 	 */
-	public void addDocument(Document d) throws IndexerException {
-		//TODO : YOU MUST IMPLEMENT THIS
+	public void addDocument(Document doc) throws IndexerException {
+		try {
+			String[] title = doc.getField(FieldNames.TITLE);
+			String[] content = doc.getField(FieldNames.CONTENT);
+			Tokenizer tokenizer = new Tokenizer();
+			TokenStream titleTokenStream = null,contentTokenStream = null;
+			if(isValidString(title[0])) {
+				titleTokenStream = tokenizer.consume(title[0]);
+			}
+
+			if(isValidString(content[0])) {
+				contentTokenStream = tokenizer.consume(content[0]);
+			}
+
+		} catch (TokenizerException te) {
+			System.err.println(te);
+		}
 	}
-	
+
 	/**
 	 * Method that indicates that all open resources must be closed
 	 * and cleaned and that the entire indexing operation has been completed.
@@ -37,5 +62,10 @@ public class IndexWriter {
 	 */
 	public void close() throws IndexerException {
 		//TODO
+	}
+
+	public static boolean isValidString(String value) {
+		value = value.trim();
+		return value != null && !"".equals(value) && !"null".equalsIgnoreCase(value);
 	}
 }

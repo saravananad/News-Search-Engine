@@ -21,6 +21,10 @@ public class TokenStream implements Iterator<Token>{
 		tokenList.add(currentPosition++, singleToken);
 	}
 	
+	public String toString() {
+		return tokenList.toString();
+	}
+	
 	/**
 	 * Method that checks if there is any Token left in the stream
 	 * with regards to the current pointer.

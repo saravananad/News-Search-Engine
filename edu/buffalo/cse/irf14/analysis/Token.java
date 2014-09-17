@@ -17,6 +17,10 @@ public class Token {
 	//The char array backing termText
 	private char[] termBuffer;
 	
+	public Token(String tokenString) {
+		this.setTermText(tokenString);
+	}
+	
 	/**
 	 * Method to set the termText to given text.
 	 * This is a sample implementation and you CAN change this
@@ -83,7 +87,6 @@ public class Token {
 	 */
 	@Override
 	public String toString() {
-		//TODO: YOU MUST IMPLEMENT THIS METHOD
-		return null;
+		return this.termText;
 	}
 }
