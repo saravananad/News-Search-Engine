@@ -3,7 +3,9 @@
  */
 package edu.buffalo.cse.irf14.analysis;
 
+import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 /**
  * @author nikhillo
@@ -12,6 +14,12 @@ import java.util.Iterator;
  * behavior
  */
 public class TokenStream implements Iterator<Token>{
+    int currentPosition = 0;
+	private LinkedList<Token> tokenList = new LinkedList<Token>();
+	
+	public void add(Token singleToken){
+		tokenList.add(currentPosition++, singleToken);
+	}
 	
 	/**
 	 * Method that checks if there is any Token left in the stream
@@ -21,8 +29,7 @@ public class TokenStream implements Iterator<Token>{
 	 */
 	@Override
 	public boolean hasNext() {
-		// TODO YOU MUST IMPLEMENT THIS
-		return false;
+		return (currentPosition < tokenList.size());
 	}
 
 	/**
@@ -34,8 +41,7 @@ public class TokenStream implements Iterator<Token>{
 	 */
 	@Override
 	public Token next() {
-		// TODO YOU MUST IMPLEMENT THIS
-		return null;
+		return !hasNext() ? null : tokenList.get(currentPosition++);
 	}
 	
 	/**
@@ -46,8 +52,9 @@ public class TokenStream implements Iterator<Token>{
 	 */
 	@Override
 	public void remove() {
-		// TODO YOU MUST IMPLEMENT THIS
-		
+		if (!(currentPosition == 0) || (currentPosition == tokenList.size() - 1)){
+			tokenList.remove(currentPosition);		// TODO NO-OP
+		}
 	}
 	
 	/**
@@ -56,7 +63,7 @@ public class TokenStream implements Iterator<Token>{
 	 * reset() must always return true.
 	 */
 	public void reset() {
-		//TODO : YOU MUST IMPLEMENT THIS
+		currentPosition = 0;
 	}
 	
 	/**
@@ -69,7 +76,7 @@ public class TokenStream implements Iterator<Token>{
 	 * @param stream : The stream to be appended
 	 */
 	public void append(TokenStream stream) {
-		//TODO : YOU MUST IMPLEMENT THIS
+		tokenList.addAll((Collection<? extends Token>) stream);
 	}
 	
 	/**
@@ -81,8 +88,8 @@ public class TokenStream implements Iterator<Token>{
 	 * has been reached or the current Token was removed
 	 */
 	public Token getCurrent() {
-		//TODO: YOU MUST IMPLEMENT THIS
-		return null;
+		if (!hasNext()) return null;
+		else return tokenList.get(currentPosition);
 	}
 	
 }
