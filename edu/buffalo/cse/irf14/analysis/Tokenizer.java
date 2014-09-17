@@ -3,11 +3,6 @@
  */
 package edu.buffalo.cse.irf14.analysis;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-
 import edu.buffalo.cse.irf14.index.IndexWriter;
 
 /**
