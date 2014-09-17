@@ -23,6 +23,7 @@ public class Parser {
 	 */
 	private static final Pattern authorLinePattern = Pattern.compile("<AUTHOR>(.*)</AUTHOR>");
 	private static final String remove_AUTHOR_Tag_Pattern = "\\s*</*AUTHOR>\\s*";
+	private static final String authorSplitRegex = "\\s+and\\s+";
 	private static final String remove_By_From_Author_Pattern = "\\S*[by|BY|By|bY]\\s+";
 	private static final Pattern titlePattern = Pattern.compile("\\s*[a-zA-Z0-9]*;+\\s*");
 	private static final Pattern datePattern = Pattern.compile("\\s*(?:[Jj]an(?:uary)?|[Ff]eb(?:ruary)?|[mM]ar(?:ch)?|[aA]pr(?:il)?|[mM]ay?|[jJ]un(?:e)?|[jJ]ul(?:y)?|[aA]ug(?:ust)?|[sS]ep(?:tember)?|[Oo]ct(?:ober)?|([Nn]ov|[Dd]ec)(?:ember))+\\s*[0-9]{1,2}+\\s*");
@@ -55,7 +56,9 @@ public class Parser {
 							if(authorParams.length > 1) {
 								doc.setField(FieldNames.AUTHORORG, authorParams[1]);
 							}
-							doc.setField(FieldNames.AUTHOR, authorParams[0]);
+							
+							String[] authors = authorParams[0].split(authorSplitRegex);
+							doc.setField(FieldNames.AUTHOR, authors);
 							isSecondLine = false;
 						} else if (isPlaceDateLine){
 							//TODO Parse and get place and date.
