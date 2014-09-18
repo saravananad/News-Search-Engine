@@ -13,9 +13,10 @@ public class Tokenizer {
 	/**
 	 * Default constructor. Assumes tokens are whitespace delimited
 	 */
-
+	private String delimiter;
 	public Tokenizer() {
 		//TODO : YOU MUST IMPLEMENT THIS METHOD
+		this.delimiter = " ";
 	}
 
 	/**
@@ -24,6 +25,7 @@ public class Tokenizer {
 	 */
 	public Tokenizer(String delim) {
 		//TODO : YOU MUST IMPLEMENT THIS METHOD
+		this.delimiter = delim;
 	}
 
 	/**
@@ -42,7 +44,7 @@ public class Tokenizer {
 	 */
 	public TokenStream consume(String str) throws TokenizerException {
 		if(IndexWriter.isValidString(str)) {
-			String[] tokenStringArray = str.split("\\s");
+			String[] tokenStringArray = str.split(delimiter);
 			if(tokenStringArray != null) {
 				TokenStream tokenStream = new TokenStream();
 				for(String currentTokenString : tokenStringArray) {

@@ -27,10 +27,16 @@ public class Parser {
 	private static final String remove_By_From_Author_Pattern = "\\S*[by|BY|By|bY]\\s+";
 	private static final Pattern titlePattern = Pattern.compile("\\s*[a-zA-Z0-9]*;+\\s*");
 	private static final Pattern datePattern = Pattern.compile("\\s*(?:[Jj]an(?:uary)?|[Ff]eb(?:ruary)?|[mM]ar(?:ch)?|[aA]pr(?:il)?|[mM]ay?|[jJ]un(?:e)?|[jJ]ul(?:y)?|[aA]ug(?:ust)?|[sS]ep(?:tember)?|[Oo]ct(?:ober)?|([Nn]ov|[Dd]ec)(?:ember))+\\s*[0-9]{1,2}+\\s*");
-	
 	public static Document parse(String filename) throws ParserException {
 		BufferedReader reader = null;
 		try {
+			if (filename == null || filename.isEmpty()){
+				throw new ParserException();
+			}
+			File inputFile = new File(filename);
+			if (!inputFile.isFile()){
+				throw new ParserException();
+			}
 			reader = new BufferedReader(new FileReader(filename));
 			Document doc = new Document();
 			if(reader != null) {
@@ -40,11 +46,10 @@ public class Parser {
 				String publishedDate = "";
 				boolean isTitleLine = true, isSecondLine = true, isPlaceDateLine = true;
 				String[] placeDateString = null;
-				File inputFile = new File(filename);
-				doc.setField(FieldNames.FILEID, inputFile.getParentFile().getName() + "_" + inputFile.getName());
+				doc.setField(FieldNames.FILEID, inputFile.getName());
 				doc.setField(FieldNames.CATEGORY, inputFile.getParentFile().getName());
 				while((line = reader.readLine()) != null) {
-					if(!line.isEmpty()) {
+					if(!line.trim().isEmpty()) {
 						if(isTitleLine) {
 							if (!(titlePattern.matcher(line).matches())){
 								doc.setField(FieldNames.TITLE, line.trim());
@@ -54,9 +59,8 @@ public class Parser {
 							line = line.replaceAll(remove_AUTHOR_Tag_Pattern, "").replaceFirst(remove_By_From_Author_Pattern, "");
 							String authorParams[] = line.split(",");
 							if(authorParams.length > 1) {
-								doc.setField(FieldNames.AUTHORORG, authorParams[1]);
-							}
-							
+								doc.setField(FieldNames.AUTHORORG, authorParams[1].trim());
+							}					
 							String[] authors = authorParams[0].split(authorSplitRegex);
 							doc.setField(FieldNames.AUTHOR, authors);
 							isSecondLine = false;
@@ -71,10 +75,13 @@ public class Parser {
 									length = placeDateString.length - 1;
 									publishedDate = placeDateString[placeDateString.length - 1];
 								}
-								for (int i = 0; i < length; i++){
-									place += placeDateString[i];
+								if (length >= 1){
+									place = placeDateString[0];
 								}
-								doc.setField(FieldNames.NEWSDATE, publishedDate);
+								for (int i = 1; i < length; i++){
+									place = place + ", " + placeDateString[i].trim();
+								}
+								doc.setField(FieldNames.NEWSDATE, publishedDate.trim());
 							}
 							else {
 								Matcher dateMatch = datePattern.matcher(line);
@@ -86,7 +93,7 @@ public class Parser {
 								else {
 									content += line.trim();
 								}
-							}		
+							}	
 							doc.setField(FieldNames.PLACE, place.trim());
 							isPlaceDateLine = false;
 						}			
@@ -98,11 +105,13 @@ public class Parser {
 				doc.setField(FieldNames.CONTENT, content);
 				return doc;
 			}
-		} catch(IOException ex) {
+		} 
+		catch(IOException ex) {
 			System.err.println(ex);
-		} finally {
+		}
+		finally {
 			try {
-				reader.close();
+				if(reader != null) reader.close();
 			} catch (IOException e) {
 				System.err.println(e);
 			}
