@@ -6,8 +6,6 @@ package edu.buffalo.cse.irf14.analysis;
 import java.util.Iterator;
 import java.util.LinkedList;
 
-import edu.buffalo.cse.irf14.index.IndexWriter;
-
 /**
  * @author nikhillo
  * Class that represents a stream of Tokens. All {@link Analyzer} and

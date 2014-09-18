@@ -15,7 +15,6 @@ public class Tokenizer {
 	 */
 	private String delimiter;
 	public Tokenizer() {
-		//TODO : YOU MUST IMPLEMENT THIS METHOD
 		this.delimiter = " ";
 	}
 
@@ -24,7 +23,6 @@ public class Tokenizer {
 	 * @param delim : The delimiter to be used
 	 */
 	public Tokenizer(String delim) {
-		//TODO : YOU MUST IMPLEMENT THIS METHOD
 		this.delimiter = delim;
 	}
 
@@ -43,6 +41,10 @@ public class Tokenizer {
 	 * tokenization
 	 */
 	public TokenStream consume(String str) throws TokenizerException {
+		if(!IndexWriter.isValidString(str)) {
+			throw new TokenizerException();
+		}
+		
 		if(IndexWriter.isValidString(str)) {
 			String[] tokenStringArray = str.split(delimiter);
 			if(tokenStringArray != null) {
