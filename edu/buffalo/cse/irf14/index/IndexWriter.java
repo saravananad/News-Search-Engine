@@ -60,7 +60,6 @@ public class IndexWriter {
 	}
 
 	public static boolean isValidString(String value) {
-		value = value.trim();
-		return value != null && !"".equals(value) && !"null".equalsIgnoreCase(value);
+		return value != null && !"".equals(value.trim()) && !"null".equalsIgnoreCase(value.trim());
 	}
 }

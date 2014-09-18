@@ -42,22 +42,20 @@ public class Tokenizer {
 	 */
 	public TokenStream consume(String str) throws TokenizerException {
 		if(!IndexWriter.isValidString(str)) {
-			throw new TokenizerException();
+			throw new TokenizerException("Invalid String passed");
 		}
-		
-		if(IndexWriter.isValidString(str)) {
-			String[] tokenStringArray = str.split(delimiter);
-			if(tokenStringArray != null) {
-				TokenStream tokenStream = new TokenStream();
-				for(String currentTokenString : tokenStringArray) {
-					if(IndexWriter.isValidString(currentTokenString)) {
-						currentTokenString = currentTokenString.trim();
-						Token token = new Token(currentTokenString);
-						tokenStream.add(token);
-					}
+
+		String[] tokenStringArray = str.split(delimiter);
+		if(tokenStringArray != null) {
+			TokenStream tokenStream = new TokenStream();
+			for(String currentTokenString : tokenStringArray) {
+				if(IndexWriter.isValidString(currentTokenString)) {
+					currentTokenString = currentTokenString.trim();
+					Token token = new Token(currentTokenString);
+					tokenStream.add(token);
 				}
-				return tokenStream;
 			}
+			return tokenStream;
 		}
 		return null;
 	}
