@@ -12,7 +12,7 @@ import java.util.LinkedList;
  * {@link TokenFilter} instances operate on this to implement their
  * behavior
  */
-public class TokenStream implements Iterator<Token>{
+public class TokenStream implements Iterator<Token> {
     int currentIndex = 0, lastNextIndex = -1;
 	private LinkedList<Token> tokenList = new LinkedList<Token>();
 	
@@ -104,6 +104,26 @@ public class TokenStream implements Iterator<Token>{
 	 */
 	public Token getCurrent() {
 		return ((lastNextIndex < 0)? null : tokenList.get(lastNextIndex));
+	}
+	
+	public Token getNextWithOutMovingPointer() {
+		if (!hasNext()){
+			return null;
+		} else {
+			return tokenList.get(currentIndex + 1);
+		}
+	}
+	
+	public boolean hasPrevious() {
+		return tokenList.isEmpty() ? false : currentIndex > 0;
+	}
+	
+	public Token getPrevious() {
+		if (!hasPrevious()){
+			return null;
+		} else {
+			return tokenList.get(currentIndex - 1);
+		}
 	}
 	
 }
