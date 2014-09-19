@@ -45,9 +45,9 @@ public class AnalyzerFactory {
 	 * @return The built {@link Analyzer} instance for an indexable {@link FieldNames}
 	 * null otherwise
 	 */
-	public Analyzer getAnalyzerForField(FieldNames name, TokenStream stream) {
+	public Analyzer getAnalyzerForField(FieldNames fieldName, TokenStream stream) {
 		String className = null;
-		if(FieldNames.TITLE.equals(name)) {
+		if(FieldNames.TITLE.name().equals(fieldName.name())) {
 			className = fieldNameAnalyser.TITLE.getClassName();
 		}
 		
