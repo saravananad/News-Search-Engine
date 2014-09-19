@@ -12,12 +12,20 @@ package edu.buffalo.cse.irf14.analysis;
  *
  */
 public abstract class TokenFilter implements Analyzer {
+
+	public TokenStream tokenStream = null;
+	
+	public TokenFilter() {}
 	/**
 	 * Default constructor, creates an instance over the given
 	 * TokenStream
 	 * @param stream : The given TokenStream instance
 	 */
 	public TokenFilter(TokenStream stream) {
-		//TODO : YOU MUST IMPLEMENT THIS METHOD
+		this.tokenStream = stream;
+	}
+	
+	public void setStream(TokenStream stream) {
+		this.tokenStream = stream;
 	}
 }

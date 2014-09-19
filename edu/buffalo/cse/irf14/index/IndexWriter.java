@@ -3,9 +3,12 @@
  */
 package edu.buffalo.cse.irf14.index;
 
+import edu.buffalo.cse.irf14.analysis.Analyzer;
+import edu.buffalo.cse.irf14.analysis.AnalyzerFactory;
 import edu.buffalo.cse.irf14.analysis.TokenStream;
 import edu.buffalo.cse.irf14.analysis.Tokenizer;
 import edu.buffalo.cse.irf14.analysis.TokenizerException;
+import edu.buffalo.cse.irf14.analysis.Util;
 import edu.buffalo.cse.irf14.document.Document;
 import edu.buffalo.cse.irf14.document.FieldNames;
 import edu.buffalo.cse.irf14.index.IndexerException;
@@ -37,14 +40,21 @@ public class IndexWriter {
 			String[] content = doc.getField(FieldNames.CONTENT);
 			Tokenizer tokenizer = new Tokenizer();
 			TokenStream titleTokenStream = null,contentTokenStream = null;
-			if(isValidString(title[0])) {
+			if(Util.isValidString(title[0])) {
 				titleTokenStream = tokenizer.consume(title[0]);
 			}
 
-			if(isValidString(content[0])) {
+			if(Util.isValidString(content[0])) {
 				contentTokenStream = tokenizer.consume(content[0]);
 			}
-
+			
+			AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
+			Analyzer analyzer = analyzerFactory.getAnalyzerForField(FieldNames.TITLE, titleTokenStream);
+			while (analyzer.increment()) {}
+			titleTokenStream = analyzer.getStream();
+			
+			// Have to index after this.
+		
 		} catch (TokenizerException te) {
 			System.err.println(te);
 		}
@@ -57,9 +67,5 @@ public class IndexWriter {
 	 */
 	public void close() throws IndexerException {
 		//TODO
-	}
-
-	public static boolean isValidString(String value) {
-		return value != null && !"".equals(value.trim()) && !"null".equalsIgnoreCase(value.trim());
 	}
 }

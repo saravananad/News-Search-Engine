@@ -3,8 +3,6 @@
  */
 package edu.buffalo.cse.irf14.analysis;
 
-import edu.buffalo.cse.irf14.index.IndexWriter;
-
 /**
  * @author nikhillo
  * Class that converts a given string into a {@link TokenStream} instance
@@ -41,7 +39,7 @@ public class Tokenizer {
 	 * tokenization
 	 */
 	public TokenStream consume(String str) throws TokenizerException {
-		if(!IndexWriter.isValidString(str)) {
+		if(!Util.isValidString(str)) {
 			throw new TokenizerException("Invalid String passed");
 		}
 
@@ -49,7 +47,7 @@ public class Tokenizer {
 		if(tokenStringArray != null) {
 			TokenStream tokenStream = new TokenStream();
 			for(String currentTokenString : tokenStringArray) {
-				if(IndexWriter.isValidString(currentTokenString)) {
+				if(Util.isValidString(currentTokenString)) {
 					currentTokenString = currentTokenString.trim();
 					Token token = new Token(currentTokenString);
 					tokenStream.add(token);

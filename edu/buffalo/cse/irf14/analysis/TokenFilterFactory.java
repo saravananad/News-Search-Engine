@@ -3,6 +3,8 @@
  */
 package edu.buffalo.cse.irf14.analysis;
 
+import edu.buffalo.cse.irf14.analysis.Util.filterList;
+
 
 /**
  * Factory class for instantiating a given TokenFilter
@@ -10,6 +12,8 @@ package edu.buffalo.cse.irf14.analysis;
  *
  */
 public class TokenFilterFactory {
+	
+	public static TokenFilterFactory tokenFilterFactory = null;
 	/**
 	 * Static method to return an instance of the factory class.
 	 * Usually factory classes are defined as singletons, i.e. 
@@ -22,8 +26,10 @@ public class TokenFilterFactory {
 	 * @return An instance of the factory
 	 */
 	public static TokenFilterFactory getInstance() {
-		//TODO : YOU MUST IMPLEMENT THIS METHOD
-		return null;
+		if(tokenFilterFactory == null) {
+			tokenFilterFactory = new TokenFilterFactory();
+		}
+		return tokenFilterFactory;
 	}
 	
 	/**
@@ -35,7 +41,14 @@ public class TokenFilterFactory {
 	 * @return The built {@link TokenFilter} instance
 	 */
 	public TokenFilter getFilterByType(TokenFilterType type, TokenStream stream) {
-		//TODO : YOU MUST IMPLEMENT THIS METHOD
+		filterList filter = filterList.valueOf(type.name());
+		try {
+			TokenFilter tokenFilter = (TokenFilter) Class.forName(filter.getClassName()).newInstance();
+			tokenFilter.setStream(stream);
+			return tokenFilter;
+		} catch (Exception e) {
+			System.err.println(e);
+		}
 		return null;
 	}
 }
