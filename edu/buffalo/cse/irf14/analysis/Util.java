@@ -19,8 +19,9 @@ public class Util {
 	
 	public enum FilterList {
 		STOPWORD(StopWordFilter.class.getName()),
-		CAPITALIZATION(CapitalizationRule.class.getName());
-//		SYMBOL(SymbolFilter.class.getName());
+		CAPITALIZATION(CapitalizationRule.class.getName()),
+		STEMMER(StemmingRule.class.getName()),
+		ACCENT(AccentRule.class.getName());
 		
 		private String className = null;
 		
