@@ -3,8 +3,7 @@
  */
 package edu.buffalo.cse.irf14.analysis;
 
-import edu.buffalo.cse.irf14.analysis.Util.filterList;
-
+import edu.buffalo.cse.irf14.analysis.Util.FilterList;
 
 /**
  * Factory class for instantiating a given TokenFilter
@@ -41,7 +40,7 @@ public class TokenFilterFactory {
 	 * @return The built {@link TokenFilter} instance
 	 */
 	public TokenFilter getFilterByType(TokenFilterType type, TokenStream stream) {
-		filterList filter = filterList.valueOf(type.name());
+		FilterList filter = FilterList.valueOf(type.name());
 		try {
 			TokenFilter tokenFilter = (TokenFilter) Class.forName(filter.getClassName()).newInstance();
 			tokenFilter.setStream(stream);

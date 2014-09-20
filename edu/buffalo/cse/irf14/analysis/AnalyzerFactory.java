@@ -3,7 +3,7 @@
  */
 package edu.buffalo.cse.irf14.analysis;
 
-import edu.buffalo.cse.irf14.analysis.Util.fieldNameAnalyser;
+import edu.buffalo.cse.irf14.analysis.Util.FieldNameAnalyser;
 import edu.buffalo.cse.irf14.document.FieldNames;
 
 /**
@@ -46,14 +46,11 @@ public class AnalyzerFactory {
 	 * null otherwise
 	 */
 	public Analyzer getAnalyzerForField(FieldNames fieldName, TokenStream stream) {
-		String className = null;
-		if(FieldNames.TITLE.name().equals(fieldName.name())) {
-			className = fieldNameAnalyser.TITLE.getClassName();
-		}
+		FieldNameAnalyser fieldNameAnalyser = FieldNameAnalyser.valueOf(fieldName.name());
 		
-		if(Util.isValidString(className)) {
+		if(fieldNameAnalyser != null) {
 			try {
-				Analyzer analyzer = (Analyzer) Class.forName(fieldNameAnalyser.TITLE.getClassName()).newInstance();
+				Analyzer analyzer = (Analyzer) Class.forName(fieldNameAnalyser.getClassName()).newInstance();
 				analyzer.setStream(stream);
 				return analyzer;
 			} catch (Exception e) {

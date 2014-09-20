@@ -2,12 +2,13 @@ package edu.buffalo.cse.irf14.analysis;
 
 public class Util {
 
-	public enum fieldNameAnalyser {
-		TITLE(TitleAnalyser.class.getName());
+	public enum FieldNameAnalyser {
+		TITLE(TitleAnalyser.class.getName()),
+		CONTENT(ContentAnalyser.class.getName());
 		
 		private String className = null;
 		
-		private fieldNameAnalyser(String className) {
+		private FieldNameAnalyser(String className) {
 			this.className = className;
 		}
 		
@@ -16,12 +17,13 @@ public class Util {
 		}
 	}
 	
-	public enum filterList {
-		STOPWORD(StopWordFilter.class.getName());
+	public enum FilterList {
+		STOPWORD(StopWordFilter.class.getName()),
+		SYMBOL(SymbolFilter.class.getName());
 		
 		private String className = null;
 		
-		private filterList(String className) {
+		private FilterList(String className) {
 			this.className = className;
 		}
 		

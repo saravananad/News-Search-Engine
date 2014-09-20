@@ -10,8 +10,8 @@ public class StopWordFilter extends TokenFilter{
 
 	@Override
 	public boolean increment() throws TokenizerException {
-		System.out.println("Came here");
-		System.out.println("tokenStream :: " + tokenStream);
+//		System.out.println("Came here");
+//		System.out.println("tokenStream :: " + tokenStream);
 		return false;
 	}
 
