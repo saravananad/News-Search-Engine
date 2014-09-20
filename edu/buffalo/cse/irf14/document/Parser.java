@@ -31,11 +31,11 @@ public class Parser {
 		BufferedReader reader = null;
 		try {
 			if (filename == null || filename.isEmpty()){
-				throw new ParserException();
+				throw new ParserException("File name cannot be null or empty.");
 			}
 			File inputFile = new File(filename);
 			if (!inputFile.isFile()){
-				throw new ParserException();
+				throw new ParserException("File name cannot contain special characters.");
 			}
 			reader = new BufferedReader(new FileReader(filename));
 			Document doc = new Document();

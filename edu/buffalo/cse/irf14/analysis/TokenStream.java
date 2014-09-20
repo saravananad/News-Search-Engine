@@ -119,14 +119,14 @@ public class TokenStream implements Iterator<Token> {
 	}
 	
 	public boolean hasPrevious() {
-		return tokenList.isEmpty() ? false : currentIndex > 0;
+		return tokenList.isEmpty() ? false : currentIndex > 1;
 	}
 	
 	public Token getPrevious() {
 		if (!hasPrevious()){
 			return null;
 		} else {
-			return tokenList.get(currentIndex - 1);
+			return tokenList.get(currentIndex - 2);
 		}
 	}
 	

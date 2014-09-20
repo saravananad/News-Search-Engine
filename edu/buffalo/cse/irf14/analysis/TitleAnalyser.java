@@ -2,7 +2,7 @@ package edu.buffalo.cse.irf14.analysis;
 
 public class TitleAnalyser implements Analyzer {
 	
-	public static final String[] titleFilters = {TokenFilterType.STOPWORD.name()};
+	public static final String[] titleFilters = {TokenFilterType.STOPWORD.name(),TokenFilterType.CAPITALIZATION.name()};
 	
 	private TokenStream tokenStream = null;
 	
