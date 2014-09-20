@@ -90,8 +90,12 @@ public class TokenStream implements Iterator<Token> {
 	 * @param stream : The stream to be appended
 	 */
 	public void append(TokenStream stream) {
-			
-		
+		if (stream!= null){
+			while(stream.hasNext()){
+				tokenList.add(stream.next());
+			}
+			stream.reset();
+		}
 	}
 	
 	/**
