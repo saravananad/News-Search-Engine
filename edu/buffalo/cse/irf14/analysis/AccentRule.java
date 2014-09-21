@@ -44,5 +44,10 @@ public class AccentRule extends TokenFilter {
 		}	
 		return false;
 	}
+	
+	@Override
+	public TokenStream getStream() {
+		return tokenStream;
+	}
 
 }

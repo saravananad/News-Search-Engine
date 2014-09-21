@@ -21,7 +21,8 @@ public class Util {
 		STOPWORD(StopWordFilter.class.getName()),
 		CAPITALIZATION(CapitalizationRule.class.getName()),
 		STEMMER(StemmingRule.class.getName()),
-		ACCENT(AccentRule.class.getName());
+		ACCENT(AccentRule.class.getName()),
+		NUMERIC(NumberRule.class.getName());
 		
 		private String className = null;
 		
