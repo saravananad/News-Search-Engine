@@ -23,7 +23,9 @@ public class Util {
 		STEMMER(StemmingRule.class.getName()),
 		ACCENT(AccentRule.class.getName()),
 		NUMERIC(NumberRule.class.getName()),
-		SYMBOL(SymbolFilter.class.getName());
+		SYMBOL(SymbolFilter.class.getName()),
+		SPECIALCHARS(SpecialCharsRule.class.getName());
+		
 		
 		private String className = null;
 		

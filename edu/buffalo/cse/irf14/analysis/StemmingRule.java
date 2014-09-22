@@ -29,18 +29,22 @@ public class StemmingRule extends TokenFilter {
 	@Override
 	public boolean increment() throws TokenizerException {
 		Stemmer stemInstance;
-		while (tokenStream.hasNext()){
-			if (tokenStream.next().getTermText().matches("[A-Za-z]*")){
+		if(!(tokenStream.next() instanceof Token) && !tokenStream.hasNext()) {
+			return false;
+		}
+		Token token = tokenStream.getCurrent();
+		if (token != null && Util.isValidString(token.getTermText())) {
+			if (token.getTermText().matches("[A-Za-z]*")){
 				stemInstance = new Stemmer();
-				char[] characterArray = tokenStream.getCurrent().getTermBuffer();
+				char[] characterArray = token.getTermBuffer();
 				for (char singleLetter : characterArray){
 					stemInstance.add(singleLetter);
 				}
 				stemInstance.stem();
-				tokenStream.getCurrent().setTermText(stemInstance.toString());	
+				token.setTermText(stemInstance.toString());	
 			}			
 		}
-		return false;
+		return true;
 	}
 	
 	@Override

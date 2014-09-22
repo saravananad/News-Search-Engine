@@ -43,24 +43,27 @@ public class CapitalizationRule extends TokenFilter {
 	
 	@Override
 	public boolean increment() throws TokenizerException {
+		if(!(tokenStream.next() instanceof Token) && !tokenStream.hasNext()) {
+			return false;
+		}
 		ArrayList<String> noChangesList = buildNoChangeTokens (tokenStream.toString().replaceAll("[\\[\\]]", "").replace(",", ""));
-		while(tokenStream.hasNext()){
-			String element = tokenStream.next().getTermText();
+		Token token = tokenStream.getCurrent();
+		if (token != null && Util.isValidString(token.getTermText())){
+			String element = token.getTermText();
 			if (!noChangesList.contains(element)){
-				tokenStream.getCurrent().setTermText(element.toLowerCase());
+				token.setTermText(element.toLowerCase());
 			}
-			element = tokenStream.getCurrent().getTermText();
+			element = token.getTermText();
 			if (tokenStream.hasPrevious()){
 				String precedingWord = tokenStream.getPrevious().getTermText();
 				boolean mergeRequired = checkForMerge(precedingWord, element);
 				if (mergeRequired){
 					tokenStream.getPrevious().setTermText(precedingWord + " " +element);
 					tokenStream.remove();
-				}
-				
+				}			
 			}
 		}
-		return false;
+		return true;
 	}
 
 	@Override

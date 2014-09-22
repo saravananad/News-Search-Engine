@@ -18,12 +18,16 @@ public class StopWordFilter extends TokenFilter{
 	
 	@Override
 	public boolean increment() throws TokenizerException {
-		while (tokenStream.hasNext()){
-			if (isStopWord(tokenStream.next().toString().toLowerCase()) >= 0){
-				tokenStream.remove();
-			}	
+		if(!(tokenStream.next() instanceof Token) && !tokenStream.hasNext()) {
+			return false;
 		}
-		return false;
+		Token token = tokenStream.getCurrent();
+		if (token != null && Util.isValidString(token.getTermText())) {
+			if (isStopWord(token.getTermText().toLowerCase()) >= 0){
+				tokenStream.remove();
+			}		
+		}
+		return true;
 	}
 
 	@Override

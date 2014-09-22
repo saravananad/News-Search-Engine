@@ -16,14 +16,18 @@ public class NumberRule extends TokenFilter {
 
 	@Override
 	public boolean increment() throws TokenizerException {
-		while (tokenStream.hasNext()){
-			String tokenString = tokenStream.next().getTermText();
+		if(!(tokenStream.next() instanceof Token) && !tokenStream.hasNext()) {
+			return false;
+		}
+		Token token = tokenStream.getCurrent();
+		if (token != null && Util.isValidString(token.getTermText())) {
+			String tokenString = token.getTermText();
 			if (!tokenString.matches("(\\d{4})(0[1-9]|1[012])(0[1-9]|[12][0-9]|3[01])")){	
 				if (tokenString.matches("(\\d+[\\/.\\,]*\\d+[%#]*)")){
 					Matcher numberMatch = specialFormatPattern.matcher(tokenString);
 					if (numberMatch.find()){
 						tokenString = tokenString.replaceAll("(\\d+\\.*\\d*)", "");
-						tokenStream.getCurrent().setTermText(tokenString);
+						token.setTermText(tokenString);
 					}
 					else {
 						tokenStream.remove();					
@@ -31,7 +35,7 @@ public class NumberRule extends TokenFilter {
 				}
 			}
 		}
-		return false;
+		return true;
 	}
 	
 	@Override
