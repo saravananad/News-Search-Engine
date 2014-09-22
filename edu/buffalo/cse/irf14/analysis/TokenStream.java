@@ -13,7 +13,8 @@ import java.util.LinkedList;
  * behavior
  */
 public class TokenStream implements Iterator<Token> {
-    int currentIndex = 0, lastNextIndex = -1;
+    private int currentIndex = 0, lastNextIndex = -1;
+    
 	private LinkedList<Token> tokenList = new LinkedList<Token>();
 	
 	/**

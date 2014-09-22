@@ -3,8 +3,8 @@ package edu.buffalo.cse.irf14.analysis;
 public class Util {
 
 	public enum FieldNameAnalyser {
-		TITLE(TitleAnalyser.class.getName());
-//		CONTENT(ContentAnalyser.class.getName());
+		TITLE(TitleAnalyser.class.getName()),
+		CONTENT(ContentAnalyser.class.getName());
 		
 		private String className = null;
 		
@@ -22,7 +22,8 @@ public class Util {
 		CAPITALIZATION(CapitalizationRule.class.getName()),
 		STEMMER(StemmingRule.class.getName()),
 		ACCENT(AccentRule.class.getName()),
-		NUMERIC(NumberRule.class.getName());
+		NUMERIC(NumberRule.class.getName()),
+		SYMBOL(SymbolFilter.class.getName());
 		
 		private String className = null;
 		

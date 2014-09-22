@@ -49,13 +49,15 @@ public class IndexWriter {
 			}
 			
 			AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
-			Analyzer titleAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.TITLE, titleTokenStream);
-			while (titleAnalyzer.increment()) {}
-			titleTokenStream = titleAnalyzer.getStream();
+//			Analyzer titleAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.TITLE, titleTokenStream);
+//			while (titleAnalyzer.increment()) {}
+//			titleTokenStream = titleAnalyzer.getStream();
 			
-			Analyzer contentAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.CONTENT, contentTokenStream);
-			while (contentAnalyzer.increment()) {}
-			contentTokenStream = contentAnalyzer.getStream();
+			if(contentTokenStream != null) {
+				Analyzer contentAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.CONTENT, contentTokenStream);
+				while (contentAnalyzer.increment()) {}
+				contentTokenStream = contentAnalyzer.getStream();
+			}
 			
 			// Have to index after this.
 		
