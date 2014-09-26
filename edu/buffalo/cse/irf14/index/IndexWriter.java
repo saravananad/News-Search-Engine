@@ -88,7 +88,7 @@ public class IndexWriter {
 				createTermIndex(doc, termTokenStream);
 				handleAuthorIndex(doc);
 				handlePlaceIndex(doc);
-			} 
+			}
 			handleCategoryIndex(doc);
 		} catch (TokenizerException te) {
 			System.err.println(te);
@@ -109,21 +109,32 @@ public class IndexWriter {
 			File placeIndexFile = new File(indexWriteDir + "/place.txt");
 			termIndexFile.getParentFile().mkdir();
 			
-			writer = new PrintWriter(new BufferedWriter(new FileWriter(termIndexFile)));
-			writeToFile(writer, termIndex);
-			writer.close();
-			writer = new PrintWriter(new BufferedWriter(new FileWriter(categoryIndexFile)));
-			writeToFile(writer, categoryIndex);
-			writer.close();
-			writer = new PrintWriter(new BufferedWriter(new FileWriter(authorIndexFile)));
-			writeToFile(writer, authorIndex);
-			writer.close();
-			writer = new PrintWriter(new BufferedWriter(new FileWriter(placeIndexFile)));
-			writeToFile(writer, placeIndex);
+			if(termIndex != null) {
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(termIndexFile)));
+				writeToFile(writer, termIndex);
+				writer.close();				
+			}
+			
+			if(categoryIndex != null) {
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(categoryIndexFile)));
+				writeToFile(writer, categoryIndex);
+				writer.close();	
+			}
+			
+			if(authorIndex != null) {
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(authorIndexFile)));
+				writeToFile(writer, authorIndex);
+				writer.close();	
+			}
+			
+			if(placeIndex != null) {
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(placeIndexFile)));
+				writeToFile(writer, placeIndex);
+				writer.close();
+			}
+			
 		} catch (IOException e) {
 			System.err.println(e);
-		} finally {
-			writer.close();
 		}
 	}
 
