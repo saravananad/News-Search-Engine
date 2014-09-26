@@ -99,6 +99,15 @@ public class TokenStream implements Iterator<Token> {
 		}
 	}
 	
+	public void toLowerCase() {
+		this.reset();
+		while(hasNext()) {
+			Token token = next();
+			token.setTermText(token.toString().toLowerCase());
+		}
+		this.reset();
+	}
+	
 	/**
 	 * Method to get the current Token from the stream without iteration.
 	 * The only difference between this method and {@link TokenStream#next()} is that

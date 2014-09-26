@@ -13,6 +13,7 @@ import edu.buffalo.cse.irf14.analysis.Util.FilterList;
 public class TokenFilterFactory {
 	
 	public static TokenFilterFactory tokenFilterFactory = null;
+	
 	/**
 	 * Static method to return an instance of the factory class.
 	 * Usually factory classes are defined as singletons, i.e. 
@@ -41,13 +42,13 @@ public class TokenFilterFactory {
 	 */
 	public TokenFilter getFilterByType(TokenFilterType type, TokenStream stream) {
 		FilterList filter = FilterList.valueOf(type.name());
-		try {
-			TokenFilter tokenFilter = (TokenFilter) Class.forName(filter.getClassName()).newInstance();
-			tokenFilter.setStream(stream);
-			return tokenFilter;
-		} catch (Exception e) {
-			System.err.println(e);
-		}
+			try {
+				TokenFilter tokenFilter = (TokenFilter) Class.forName(filter.getClassName()).newInstance();
+				tokenFilter.setStream(stream);
+				return tokenFilter;
+			} catch (Exception e) {
+				System.out.println(e);
+			}
 		return null;
 	}
 }

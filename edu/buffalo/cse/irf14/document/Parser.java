@@ -27,6 +27,7 @@ public class Parser {
 	private static final String remove_By_From_Author_Pattern = "\\S*[by|BY|By|bY]\\s+";
 	private static final Pattern titlePattern = Pattern.compile("\\s*[a-zA-Z0-9]*;+\\s*");
 	private static final Pattern datePattern = Pattern.compile("\\s*(?:[Jj]an(?:uary)?|[Ff]eb(?:ruary)?|[mM]ar(?:ch)?|[aA]pr(?:il)?|[mM]ay?|[jJ]un(?:e)?|[jJ]ul(?:y)?|[aA]ug(?:ust)?|[sS]ep(?:tember)?|[Oo]ct(?:ober)?|([Nn]ov|[Dd]ec)(?:ember))+\\s*[0-9]{1,2}+\\s*");
+
 	public static Document parse(String filename) throws ParserException {
 		BufferedReader reader = null;
 		try {
@@ -82,8 +83,7 @@ public class Parser {
 									place = place + ", " + placeDateString[i].trim();
 								}
 								doc.setField(FieldNames.NEWSDATE, publishedDate.trim());
-							}
-							else {
+							} else {
 								Matcher dateMatch = datePattern.matcher(line);
 								if (dateMatch.find()){
 									doc.setField(FieldNames.NEWSDATE, dateMatch.group().trim());
@@ -96,8 +96,7 @@ public class Parser {
 							}	
 							doc.setField(FieldNames.PLACE, place.trim());
 							isPlaceDateLine = false;
-						}			
-						else {
+						} else {
 							content = content + " " + line.trim();
 						}
 					}

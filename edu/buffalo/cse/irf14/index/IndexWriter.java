@@ -3,6 +3,17 @@
  */
 package edu.buffalo.cse.irf14.index;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.TreeMap;
+
 import edu.buffalo.cse.irf14.analysis.Analyzer;
 import edu.buffalo.cse.irf14.analysis.AnalyzerFactory;
 import edu.buffalo.cse.irf14.analysis.Token;
@@ -23,8 +34,13 @@ public class IndexWriter {
 	 * Default constructor
 	 * @param indexDir : The root directory to be sued for indexing
 	 */
+	private static Map<String, List<Long>> termIndex = new TreeMap<String, List<Long>>();
+	private Tokenizer tokenizer = new Tokenizer();
+
+	private String indexWriteDir = null;
+	
 	public IndexWriter(String indexDir) {
-		//TODO : YOU MUST IMPLEMENT THIS
+		indexWriteDir = indexDir;
 	}
 
 	/**
@@ -37,42 +53,33 @@ public class IndexWriter {
 	 */
 	public void addDocument(Document doc) throws IndexerException {
 		try {
-			String[] title = doc.getField(FieldNames.TITLE);
-			String[] content = doc.getField(FieldNames.CONTENT);
-			String[] author = doc.getField(FieldNames.AUTHOR);
-			String[] place = doc.getField(FieldNames.PLACE);
-			String[] category = doc.getField(FieldNames.CATEGORY);
-			Tokenizer tokenizer = new Tokenizer();
-			TokenStream titleTokenStream = null, contentTokenStream = null;
-			TokenStream lowerCasedTitle = new TokenStream();
-			
+			String title = doc.getField(FieldNames.TITLE)[0];
+			String content = doc.getField(FieldNames.CONTENT)[0];
+			TokenStream titleTokenStream = null, termTokenStream = null;
+
 			/* Tokenize the parsed fields */
-			if (title != null) {
-				if (Util.isValidString(title[0])) {
-					titleTokenStream = tokenizer.consume(title[0]);
-				}		
+			if (title != null && Util.isValidString(title)) {
+				titleTokenStream = tokenizer.consume(title);
 			}
-			if (content != null){
-				if (Util.isValidString(content[0])) {
-					contentTokenStream = tokenizer.consume(content[0]);
+
+			if (content != null && Util.isValidString(content)){
+				termTokenStream = tokenizer.consume(content);
+			}
+
+			if (termTokenStream != null){
+				if (titleTokenStream != null) {
+					titleTokenStream.toLowerCase();
+					termTokenStream.append(titleTokenStream);
 				}
-			}
-			if (contentTokenStream != null){
+
 				AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
-				if (titleTokenStream != null){
-					while (titleTokenStream.hasNext()){
-						Token token = new Token(titleTokenStream.next().toString().toLowerCase());
-						lowerCasedTitle.add(token);	
-					}
-					contentTokenStream.append(lowerCasedTitle);
-				}
-				Analyzer contentAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.CONTENT, contentTokenStream);
-				while (contentAnalyzer.increment()) {}
-				contentTokenStream = contentAnalyzer.getStream();		
+				Analyzer contentAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.CONTENT, termTokenStream);
+				contentAnalyzer.increment();
+				termTokenStream = contentAnalyzer.getStream();		
 			}
-			
-			// Have to index after this.
-		
+
+			//Index Creation
+//			createIndex(doc, termTokenStream);
 		} catch (TokenizerException te) {
 			System.err.println(te);
 		} 
@@ -84,6 +91,49 @@ public class IndexWriter {
 	 * @throws IndexerException : In case any error occurs
 	 */
 	public void close() throws IndexerException {
-		//TODO
+		PrintWriter writer = null;
+		try {
+			writer = new PrintWriter(new BufferedWriter(new FileWriter(indexWriteDir + "/out.txt")));
+			Iterator<Entry<String, List<Long>>> iterator = termIndex.entrySet().iterator();
+			while(iterator.hasNext()) {
+				Entry<String, List<Long>> next = iterator.next();
+				writer.write(next.getKey() + " = ");
+				String postings = next.getValue().toString();
+				postings = postings.substring(1, postings.lastIndexOf("]")).replace(", ", ",");
+				writer.write((String) postings + "\n");
+			}
+
+		} catch (IOException e) {
+			System.err.println(e);
+		} finally {
+			writer.close();
+		}
 	}
+
+	private static void createIndex(Document doc, TokenStream tokenStream) {
+		String docName = doc.getField(FieldNames.CATEGORY)[0] + "_" + doc.getField(FieldNames.FILEID)[0];
+		long docID = Util.getDocID(docName);
+		handleTermIndex(docID, tokenStream);
+	}
+
+	public static void handleTermIndex(long currentDocID, TokenStream tokenStream) {
+		if(tokenStream != null && currentDocID != -1) {
+			while(tokenStream.hasNext()) {
+				Token token = tokenStream.next();
+				if(Util.isValidString(token.toString())) {
+					if(termIndex.containsKey(token.toString())) {
+						List<Long> docList = termIndex.get(token.toString());
+						if(!docList.contains(currentDocID)) {
+							docList.add(currentDocID);
+						}
+					} else {
+						List<Long> list = new LinkedList<Long>();
+						list.add(currentDocID);
+						termIndex.put(token.toString(), list);
+					}
+				}
+			}
+		}
+	}
+	
 }
