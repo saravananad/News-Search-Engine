@@ -4,6 +4,7 @@
 package edu.buffalo.cse.irf14.index;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -35,6 +36,10 @@ public class IndexWriter {
 	 * @param indexDir : The root directory to be sued for indexing
 	 */
 	private static Map<String, List<Long>> termIndex = new TreeMap<String, List<Long>>();
+	private static Map<String, List<Long>> authorIndex = new TreeMap<String, List<Long>>();
+	private static Map<String, List<Long>> categoryIndex = new TreeMap<String, List<Long>>();
+	private static Map<String, List<Long>> placeIndex = new TreeMap<String, List<Long>>();
+	
 	private Tokenizer tokenizer = new Tokenizer();
 
 	private String indexWriteDir = null;
@@ -53,33 +58,38 @@ public class IndexWriter {
 	 */
 	public void addDocument(Document doc) throws IndexerException {
 		try {
-			String title = doc.getField(FieldNames.TITLE)[0];
-			String content = doc.getField(FieldNames.CONTENT)[0];
-			TokenStream titleTokenStream = null, termTokenStream = null;
+			String docID = doc.getField(FieldNames.FILEID)[0];
+			if(!Util.hasDocInMap(docID)) {
+				String title = doc.getField(FieldNames.TITLE)[0];
+				String content = doc.getField(FieldNames.CONTENT)[0];
+				TokenStream titleTokenStream = null, termTokenStream = null;
 
-			/* Tokenize the parsed fields */
-			if (title != null && Util.isValidString(title)) {
-				titleTokenStream = tokenizer.consume(title);
-			}
-
-			if (content != null && Util.isValidString(content)){
-				termTokenStream = tokenizer.consume(content);
-			}
-
-			if (termTokenStream != null){
-				if (titleTokenStream != null) {
-					titleTokenStream.toLowerCase();
-					termTokenStream.append(titleTokenStream);
+				/* Tokenize the parsed fields */
+				if (title != null && Util.isValidString(title)) {
+					titleTokenStream = tokenizer.consume(title);
 				}
 
-				AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
-				Analyzer contentAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.CONTENT, termTokenStream);
-				contentAnalyzer.increment();
-				termTokenStream = contentAnalyzer.getStream();		
-			}
+				if (content != null && Util.isValidString(content)){
+					termTokenStream = tokenizer.consume(content);
+				}
 
-			//Index Creation
-//			createIndex(doc, termTokenStream);
+				if (termTokenStream != null){
+					if (titleTokenStream != null) {
+						titleTokenStream.toLowerCase();
+						termTokenStream.append(titleTokenStream);
+					}
+
+					AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
+					Analyzer contentAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.CONTENT, termTokenStream);
+					contentAnalyzer.increment();
+					termTokenStream = contentAnalyzer.getStream();		
+				}
+				//Index Creation
+				createTermIndex(doc, termTokenStream);
+				handleAuthorIndex(doc);
+				handlePlaceIndex(doc);
+			} 
+			handleCategoryIndex(doc);
 		} catch (TokenizerException te) {
 			System.err.println(te);
 		} 
@@ -93,16 +103,23 @@ public class IndexWriter {
 	public void close() throws IndexerException {
 		PrintWriter writer = null;
 		try {
-			writer = new PrintWriter(new BufferedWriter(new FileWriter(indexWriteDir + "/out.txt")));
-			Iterator<Entry<String, List<Long>>> iterator = termIndex.entrySet().iterator();
-			while(iterator.hasNext()) {
-				Entry<String, List<Long>> next = iterator.next();
-				writer.write(next.getKey() + " = ");
-				String postings = next.getValue().toString();
-				postings = postings.substring(1, postings.lastIndexOf("]")).replace(", ", ",");
-				writer.write((String) postings + "\n");
-			}
-
+			File termIndexFile = new File(indexWriteDir + "/term.txt");
+			File categoryIndexFile = new File(indexWriteDir + "/category.txt");
+			File authorIndexFile = new File(indexWriteDir + "/author.txt");
+			File placeIndexFile = new File(indexWriteDir + "/place.txt");
+			termIndexFile.getParentFile().mkdir();
+			
+			writer = new PrintWriter(new BufferedWriter(new FileWriter(termIndexFile)));
+			writeToFile(writer, termIndex);
+			writer.close();
+			writer = new PrintWriter(new BufferedWriter(new FileWriter(categoryIndexFile)));
+			writeToFile(writer, categoryIndex);
+			writer.close();
+			writer = new PrintWriter(new BufferedWriter(new FileWriter(authorIndexFile)));
+			writeToFile(writer, authorIndex);
+			writer.close();
+			writer = new PrintWriter(new BufferedWriter(new FileWriter(placeIndexFile)));
+			writeToFile(writer, placeIndex);
 		} catch (IOException e) {
 			System.err.println(e);
 		} finally {
@@ -110,13 +127,13 @@ public class IndexWriter {
 		}
 	}
 
-	private static void createIndex(Document doc, TokenStream tokenStream) {
-		String docName = doc.getField(FieldNames.CATEGORY)[0] + "_" + doc.getField(FieldNames.FILEID)[0];
+	private static void createTermIndex(Document doc, TokenStream tokenStream) {
+		String docName = doc.getField(FieldNames.FILEID)[0];
 		long docID = Util.getDocID(docName);
 		handleTermIndex(docID, tokenStream);
 	}
 
-	public static void handleTermIndex(long currentDocID, TokenStream tokenStream) {
+	private static void handleTermIndex(long currentDocID, TokenStream tokenStream) {
 		if(tokenStream != null && currentDocID != -1) {
 			while(tokenStream.hasNext()) {
 				Token token = tokenStream.next();
@@ -136,4 +153,63 @@ public class IndexWriter {
 		}
 	}
 	
+	private static void handleAuthorIndex(Document doc) {
+		String authors[] = doc.getField(FieldNames.AUTHOR);
+		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
+		if(authors != null && authors.length > 0) {
+			for(String author : authors) {
+				if(authorIndex.containsKey(author)) {
+					List<Long> list = authorIndex.get(author);
+					if(!list.contains(author)) {
+						list.add(docID);
+					}
+				} else {
+					List<Long> list = new LinkedList<Long>();
+					list.add(docID);
+					authorIndex.put(author, list);
+				}
+			}
+		}
+	}
+	
+	private static void handleCategoryIndex(Document doc) {
+		String currentCategory = doc.getField(FieldNames.CATEGORY)[0];
+		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
+		if(categoryIndex.containsKey(currentCategory)) {
+			List<Long> list = categoryIndex.get(currentCategory);
+			if(!list.contains(docID)) {
+				list.add(docID);
+			}
+		} else {
+			List<Long> list = new LinkedList<Long>();
+			list.add(docID);
+			categoryIndex.put(currentCategory, list);
+		}
+	}
+	
+	private static void handlePlaceIndex(Document doc) {
+		String currentPlace = doc.getField(FieldNames.PLACE)[0];
+		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
+		if(placeIndex.containsKey(currentPlace)) {
+			List<Long> list = placeIndex.get(currentPlace);
+			if(!list.contains(docID)) {
+				list.add(docID);
+			}
+		} else {
+			List<Long> list = new LinkedList<Long>();
+			list.add(docID);
+			placeIndex.put(currentPlace, list);
+		}
+	}
+	
+	private static void writeToFile(PrintWriter writer, Map<String,List<Long>> stream) {
+		Iterator<Entry<String, List<Long>>> iterator = stream.entrySet().iterator();
+		while(iterator.hasNext()) {
+			Entry<String, List<Long>> next = iterator.next();
+			writer.write(next.getKey() + ":");
+			String postings = next.getValue().toString();
+			postings = postings.substring(1, postings.lastIndexOf("]")).replace(", ", ",");
+			writer.write((String) postings + "\n");
+		}
+	}
 }

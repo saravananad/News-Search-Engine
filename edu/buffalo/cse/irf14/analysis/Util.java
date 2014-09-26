@@ -33,6 +33,10 @@ public class Util {
 		return value != null && !"".equals(value.trim()) && !"null".equalsIgnoreCase(value.trim());
 	}
 	
+	public static boolean hasDocInMap(String docName) {
+		return docIDMapping.containsKey(docName);
+	}
+	
 	public static long getDocID(String docName) {
 		if(Util.isValidString(docName)) {
 			Long docIDInMap = docIDMapping.get(docName);
