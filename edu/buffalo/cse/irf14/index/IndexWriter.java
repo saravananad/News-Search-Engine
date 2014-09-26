@@ -39,11 +39,11 @@ public class IndexWriter {
 	private static Map<String, List<Long>> authorIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, List<Long>> categoryIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, List<Long>> placeIndex = new TreeMap<String, List<Long>>();
-	
+
 	private Tokenizer tokenizer = new Tokenizer();
 
 	private String indexWriteDir = null;
-	
+
 	public IndexWriter(String indexDir) {
 		indexWriteDir = indexDir;
 	}
@@ -103,36 +103,55 @@ public class IndexWriter {
 	public void close() throws IndexerException {
 		PrintWriter writer = null;
 		try {
-			File termIndexFile = new File(indexWriteDir + "/term.txt");
-			File categoryIndexFile = new File(indexWriteDir + "/category.txt");
-			File authorIndexFile = new File(indexWriteDir + "/author.txt");
-			File placeIndexFile = new File(indexWriteDir + "/place.txt");
-			termIndexFile.getParentFile().mkdir();
-			
 			if(termIndex != null) {
+				File termIndexFile = new File(indexWriteDir + "/term.txt");
+				termIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(termIndexFile)));
 				writeToFile(writer, termIndex);
-				writer.close();				
+				writer.close();
 			}
-			
+
 			if(categoryIndex != null) {
+				File categoryIndexFile = new File(indexWriteDir + "/category.txt");
+				categoryIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(categoryIndexFile)));
 				writeToFile(writer, categoryIndex);
 				writer.close();	
 			}
-			
+
 			if(authorIndex != null) {
+				File authorIndexFile = new File(indexWriteDir + "/author.txt");
+				authorIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(authorIndexFile)));
 				writeToFile(writer, authorIndex);
 				writer.close();	
 			}
-			
+
 			if(placeIndex != null) {
+				File placeIndexFile = new File(indexWriteDir + "/place.txt");
+				placeIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(placeIndexFile)));
 				writeToFile(writer, placeIndex);
 				writer.close();
 			}
-			
+
+			Map<String, Long> docIDMap = Util.getDocIDMap();
+			if(docIDMap != null) {
+				File docIndexFile = new File(indexWriteDir + "/doc-dictionary.txt");
+				docIndexFile.getParentFile().mkdir();
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(docIndexFile)));
+				Iterator<Entry<String, Long>> iterator = docIDMap.entrySet().iterator();
+				while(iterator.hasNext()) {
+					Entry<String, Long> next = iterator.next();
+					writer.write(next.getKey() + ":");
+					String postings = next.getValue().toString();
+					postings = postings.replace(", ", ",");
+					writer.write((String) postings + "\n");
+				}
+
+				writer.close();
+			}
+
 		} catch (IOException e) {
 			System.err.println(e);
 		}
@@ -163,7 +182,7 @@ public class IndexWriter {
 			}
 		}
 	}
-	
+
 	private static void handleAuthorIndex(Document doc) {
 		String authors[] = doc.getField(FieldNames.AUTHOR);
 		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
@@ -182,7 +201,7 @@ public class IndexWriter {
 			}
 		}
 	}
-	
+
 	private static void handleCategoryIndex(Document doc) {
 		String currentCategory = doc.getField(FieldNames.CATEGORY)[0];
 		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
@@ -197,7 +216,7 @@ public class IndexWriter {
 			categoryIndex.put(currentCategory, list);
 		}
 	}
-	
+
 	private static void handlePlaceIndex(Document doc) {
 		String currentPlace = doc.getField(FieldNames.PLACE)[0];
 		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
@@ -212,7 +231,7 @@ public class IndexWriter {
 			placeIndex.put(currentPlace, list);
 		}
 	}
-	
+
 	private static void writeToFile(PrintWriter writer, Map<String,List<Long>> stream) {
 		Iterator<Entry<String, List<Long>>> iterator = stream.entrySet().iterator();
 		while(iterator.hasNext()) {

@@ -48,4 +48,8 @@ public class Util {
 		}
 		return -1;
 	}
+	
+	public static Map<String, Long> getDocIDMap() {
+		return docIDMapping;
+	}
 }
