@@ -58,7 +58,7 @@ public class CapitalizationRule extends TokenFilter {
 				String precedingWord = tokenStream.getPrevious().getTermText();
 				boolean mergeRequired = checkForMerge(precedingWord, element);
 				if (mergeRequired){
-					tokenStream.getPrevious().merge(tokenStream.getPrevious(), token);
+					tokenStream.getPrevious().merge(token);
 					tokenStream.remove();
 				}			
 			}

@@ -70,11 +70,11 @@ public class Token {
 	 * @param tokens The token array to be merged
 	 */
 	protected void merge(Token...tokens) {
-		String tempText = "";
-		for (Token token : tokens){
-			tempText = tempText + token.toString() + " ";
-		}
-		this.termText = tempText.trim();
+		if (tokens != null){
+			for (Token token : tokens){
+				this.termText = this.termText + " " + token.toString();
+			}
+		}	
 	}
 	
 	/**
