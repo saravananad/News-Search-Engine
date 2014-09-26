@@ -2,7 +2,7 @@ package edu.buffalo.cse.irf14.analysis;
 
 public class ContentAnalyser implements Analyzer {
 	
-	public static final String[] contentFilters = {TokenFilterType.SYMBOL.name()};
+	public static final String[] contentFilters = {TokenFilterType.ACCENT.name(), TokenFilterType.STOPWORD.name(), TokenFilterType.NUMERIC.name(), TokenFilterType.SPECIALCHARS.name(), TokenFilterType.SYMBOL.name(), TokenFilterType.CAPITALIZATION.name(), TokenFilterType.STEMMER.name()};
 	
 	private TokenStream tokenStream = null;
 	
@@ -13,11 +13,13 @@ public class ContentAnalyser implements Analyzer {
 	}
 	
 	public void setStream(TokenStream stream) {
+		stream.reset();
 		this.tokenStream = stream;
 	}
 	
 	@Override
 	public TokenStream getStream() {
+		this.tokenStream.reset();
 		return this.tokenStream;
 	}
 	

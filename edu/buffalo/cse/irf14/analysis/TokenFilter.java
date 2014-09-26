@@ -27,11 +27,13 @@ public abstract class TokenFilter implements Analyzer {
 	
 	@Override
 	public void setStream(TokenStream stream) {
+		stream.reset();
 		this.tokenStream = stream;
 	}
 	
 	@Override
 	public TokenStream getStream() {
+		this.tokenStream.reset();
 		return this.tokenStream;
 	}
 }

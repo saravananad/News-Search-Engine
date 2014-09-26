@@ -6,7 +6,7 @@ import java.util.regex.Pattern;
 
 public class CapitalizationRule extends TokenFilter {
 
-	private static final Pattern camelAcronymPattern = Pattern.compile("(([A-Z]+[a-z]+|[a-z]+[A-Z]+)[,.!']*[a-z]*|[A-Z]+.*)");
+	private static final Pattern camelAcronymPattern = Pattern.compile("(([A-Z]+[a-z]+|[a-z]+[A-Z]+)[,.!']*[a-z]*|[A-Z]+[\\.,!]*)");
 	private static final Pattern firstWordPattern = Pattern.compile("(^|([.!?]\\s))(\\w+)");
 	private static final Pattern properNounsPattern = Pattern.compile("[A-Z][a-z]+");
 	
@@ -58,7 +58,7 @@ public class CapitalizationRule extends TokenFilter {
 				String precedingWord = tokenStream.getPrevious().getTermText();
 				boolean mergeRequired = checkForMerge(precedingWord, element);
 				if (mergeRequired){
-					tokenStream.getPrevious().setTermText(precedingWord + " " +element);
+					tokenStream.getPrevious().merge(tokenStream.getPrevious(), token);
 					tokenStream.remove();
 				}			
 			}

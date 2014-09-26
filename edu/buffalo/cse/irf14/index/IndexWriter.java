@@ -5,6 +5,7 @@ package edu.buffalo.cse.irf14.index;
 
 import edu.buffalo.cse.irf14.analysis.Analyzer;
 import edu.buffalo.cse.irf14.analysis.AnalyzerFactory;
+import edu.buffalo.cse.irf14.analysis.Token;
 import edu.buffalo.cse.irf14.analysis.TokenStream;
 import edu.buffalo.cse.irf14.analysis.Tokenizer;
 import edu.buffalo.cse.irf14.analysis.TokenizerException;
@@ -38,32 +39,43 @@ public class IndexWriter {
 		try {
 			String[] title = doc.getField(FieldNames.TITLE);
 			String[] content = doc.getField(FieldNames.CONTENT);
+			String[] author = doc.getField(FieldNames.AUTHOR);
+			String[] place = doc.getField(FieldNames.PLACE);
+			String[] category = doc.getField(FieldNames.CATEGORY);
 			Tokenizer tokenizer = new Tokenizer();
-			TokenStream titleTokenStream = null,contentTokenStream = null;
-			if(Util.isValidString(title[0])) {
-				titleTokenStream = tokenizer.consume(title[0]);
-			}
-
-			if(Util.isValidString(content[0])) {
-				contentTokenStream = tokenizer.consume(content[0]);
-			}
+			TokenStream titleTokenStream = null, contentTokenStream = null;
+			TokenStream lowerCasedTitle = new TokenStream();
 			
-			AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
-//			Analyzer titleAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.TITLE, titleTokenStream);
-//			while (titleAnalyzer.increment()) {}
-//			titleTokenStream = titleAnalyzer.getStream();
-			
-			if(contentTokenStream != null) {
+			/* Tokenize the parsed fields */
+			if (title != null) {
+				if (Util.isValidString(title[0])) {
+					titleTokenStream = tokenizer.consume(title[0]);
+				}		
+			}
+			if (content != null){
+				if (Util.isValidString(content[0])) {
+					contentTokenStream = tokenizer.consume(content[0]);
+				}
+			}
+			if (contentTokenStream != null){
+				AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
+				if (titleTokenStream != null){
+					while (titleTokenStream.hasNext()){
+						Token token = new Token(titleTokenStream.next().toString().toLowerCase());
+						lowerCasedTitle.add(token);	
+					}
+					contentTokenStream.append(lowerCasedTitle);
+				}
 				Analyzer contentAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.CONTENT, contentTokenStream);
 				while (contentAnalyzer.increment()) {}
-				contentTokenStream = contentAnalyzer.getStream();
+				contentTokenStream = contentAnalyzer.getStream();		
 			}
 			
 			// Have to index after this.
 		
 		} catch (TokenizerException te) {
 			System.err.println(te);
-		}
+		} 
 	}
 
 	/**
