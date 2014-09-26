@@ -9,6 +9,8 @@ public class CapitalizationRule extends TokenFilter {
 	private static final Pattern camelAcronymPattern = Pattern.compile("(([A-Z]+[a-z]+|[a-z]+[A-Z]+)[,.!']*[a-z]*|[A-Z]+[\\.,!]*)");
 	private static final Pattern firstWordPattern = Pattern.compile("(^|([.!?]\\s))(\\w+)");
 	private static final Pattern properNounsPattern = Pattern.compile("[A-Z][a-z]+");
+	private static ArrayList<String> noChangesList = new ArrayList<String>();
+	private boolean isMethodCalled = true;
 	
 	public CapitalizationRule() { super(); }
 
@@ -32,6 +34,7 @@ public class CapitalizationRule extends TokenFilter {
 				retainedList.remove(firstWord);
 			}
 		}	
+		isMethodCalled = false;
 		return retainedList;
 	}
 	
@@ -46,7 +49,11 @@ public class CapitalizationRule extends TokenFilter {
 		if(!(tokenStream.next() instanceof Token) && !tokenStream.hasNext()) {
 			return false;
 		}
-		ArrayList<String> noChangesList = buildNoChangeTokens (tokenStream.toString().replaceAll("[\\[\\]]", "").replace(",", ""));
+		
+		/* Build the list of tokens to be preserved ONLY ONCE */
+		if (isMethodCalled){
+			noChangesList = buildNoChangeTokens (tokenStream.toString().replaceAll("[\\[\\]]", "").replace(",", ""));			
+		}
 		Token token = tokenStream.getCurrent();
 		if (token != null && Util.isValidString(token.getTermText())){
 			String element = token.getTermText();
