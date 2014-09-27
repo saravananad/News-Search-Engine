@@ -41,8 +41,6 @@ public class IndexWriter {
 	private static Map<String, List<Long>> placeIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, Map<Long,Long>> termOccurrence = new TreeMap<String, Map<Long,Long>>();
 	
-	private static final String delimiter = ":";
-	
 	private Tokenizer tokenizer = new Tokenizer();
 
 	private String indexWriteDir = null;
@@ -201,7 +199,7 @@ public class IndexWriter {
 		Iterator<Entry<String, List<Long>>> iterator = stream.entrySet().iterator();
 		while(iterator.hasNext()) {
 			Entry<String, List<Long>> next = iterator.next();
-			writer.write(next.getKey() + ":");
+			writer.write(next.getKey() + Util.dictionaryDelimiter);
 			String postings = next.getValue().toString();
 			postings = postings.substring(1, postings.lastIndexOf("]")).replace(", ", ",");
 			writer.write((String) postings + "\n");
@@ -253,10 +251,15 @@ public class IndexWriter {
 					String termName = next.getKey();
 					Map<Long, Long> docOccurrences = next.getValue();
 					Iterator<Entry<Long, Long>> innerIterator = docOccurrences.entrySet().iterator();
+					StringBuilder line = new StringBuilder();
+					line.append(termName + Util.dictionaryDelimiter);
 					while(innerIterator.hasNext()) {
 						Entry<Long, Long> innerNext = innerIterator.next();
-						writer.write(termName + delimiter + innerNext.getKey() + delimiter + innerNext.getValue() + "\n");
+						line.append(innerNext.getKey() + Util.invidualDoc_OccurDelimiter + innerNext.getValue());
+						line.append(Util.occurenceDelimiter);
 					}
+					String substring = line.substring(0, line.length() - Util.occurenceDelimiter.length()) + "\n";
+					writer.write(substring);
 				}
 				writer.close();
 			}
@@ -269,7 +272,7 @@ public class IndexWriter {
 				Iterator<Entry<String, Long>> iterator = docIDMap.entrySet().iterator();
 				while(iterator.hasNext()) {
 					Entry<String, Long> next = iterator.next();
-					writer.write(next.getKey() + ":");
+					writer.write(next.getKey() + Util.dictionaryDelimiter);
 					String postings = next.getValue().toString();
 					postings = postings.replace(", ", ",");
 					writer.write((String) postings + "\n");

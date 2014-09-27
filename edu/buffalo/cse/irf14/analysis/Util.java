@@ -8,6 +8,10 @@ public class Util {
 	private static Map<String, Long> docIDMapping = new HashMap<String, Long>();
 	private static long docID = 0;
 	
+	public static final String dictionaryDelimiter = ":";
+	public static final String occurenceDelimiter = "::";
+	public static final String invidualDoc_OccurDelimiter = "=";
+	
 	public enum FilterList {
 		STOPWORD(StopWordFilter.class.getName()),
 		CAPITALIZATION(CapitalizationRule.class.getName()),
