@@ -124,8 +124,12 @@ public class TokenStream implements Iterator<Token> {
 		if (!hasNext()){
 			return null;
 		} else {
-			return tokenList.get(currentIndex + 1);
+			return tokenList.get(currentIndex);
 		}
+	}
+	
+	public int getNextPostion() {
+		return this.currentIndex;
 	}
 	
 	public boolean hasPrevious() {
@@ -140,4 +144,37 @@ public class TokenStream implements Iterator<Token> {
 		}
 	}
 	
+	public int getPreviousPostion() {
+		return this.currentIndex - 2;
+	}
+	
+	public int getCurrentPosition() {
+		return this.lastNextIndex != -1 ? this.lastNextIndex : this.currentIndex;
+	}
+	
+	public Token getTokenAtPosition(int position) {
+		if(position > 0 && position < tokenList.size()) {
+			return tokenList.get(position);
+		}
+		return null;
+	}
+	
+	public void remove(int position) {
+		if(position > 0 && position <= tokenList.size()) {
+			if(position == lastNextIndex) {
+				currentIndex = lastNextIndex;
+				lastNextIndex = -1;
+			} else if(position < lastNextIndex) {
+				tokenList.remove(position);
+				lastNextIndex--;
+				currentIndex--;
+			} else {
+				tokenList.remove(position);
+			}
+		}
+	}
+	
+	public int size() {
+		return this.tokenList.size();
+	}
 }

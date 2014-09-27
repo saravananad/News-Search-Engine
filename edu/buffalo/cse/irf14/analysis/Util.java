@@ -26,7 +26,8 @@ public class Util {
 		ACCENT(AccentRule.class.getName()),
 		NUMERIC(NumberRule.class.getName()),
 		SYMBOL(SymbolFilter.class.getName()),
-		SPECIALCHARS(SpecialCharsRule.class.getName());
+		SPECIALCHARS(SpecialCharsRule.class.getName()),
+		DATE(DateFilter.class.getName());
 		
 		
 		private String className = null;
@@ -66,5 +67,30 @@ public class Util {
 	
 	public static Map<String, Long> getDocIDMap() {
 		return docIDMapping;
+	}
+	
+	public enum Month {
+		january("01"),jan("01"),
+		february("02"),feb("02"), 
+		march("03"), mar("03"),
+		april("04"), apr("04"),
+        may("05"), 
+        june("06"), jun("06"),
+        july("07"), jul("07"),
+        august("08"), aug("08"),
+        september("09"), sep("09"),
+        october("10"), oct("10"),
+        november("11"),nov("11"),
+        december("12"), dec("12");
+		
+		private String value = null;
+		
+		private Month(String value) {
+			this.value = value;
+		}
+		
+		public String getValue() {
+			return this.value;
+		}
 	}
 }
