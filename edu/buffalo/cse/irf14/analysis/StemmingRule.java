@@ -46,9 +46,4 @@ public class StemmingRule extends TokenFilter {
 		}
 		return true;
 	}
-	
-	@Override
-	public TokenStream getStream() {
-		return tokenStream;
-	}
 }

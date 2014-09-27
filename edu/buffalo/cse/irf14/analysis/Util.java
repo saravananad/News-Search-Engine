@@ -9,8 +9,15 @@ public class Util {
 	private static long docID = 0;
 	
 	public static final String dictionaryDelimiter = ":";
-	public static final String occurenceDelimiter = "::";
+	public static final String occurenceDelimiter = ";";
 	public static final String invidualDoc_OccurDelimiter = "=";
+	
+	public static String authorIndexFile = "/AuthorIndex.txt";
+	public static String termIndexFile = "/TermIndex.txt";
+	public static String categoryIndexFile = "/CategoryIndex.txt";
+	public static String placeIndexFile = "/PlaceIndex.txt";
+	public static String docDictionaryFile = "/DocDictionary.txt";
+	public static String termOccurenceFile = "/TermOccurence.txt";
 	
 	public enum FilterList {
 		STOPWORD(StopWordFilter.class.getName()),
@@ -35,6 +42,10 @@ public class Util {
 	
 	public static boolean isValidString(String value) {
 		return value != null && !"".equals(value.trim()) && !"null".equalsIgnoreCase(value.trim());
+	}
+	
+	public static boolean isValidArray(String[] stringArray){
+		return stringArray != null;
 	}
 	
 	public static boolean hasDocInMap(String docName) {

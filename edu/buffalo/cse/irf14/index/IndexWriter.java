@@ -61,8 +61,13 @@ public class IndexWriter {
 		try {
 			String docID = doc.getField(FieldNames.FILEID)[0];
 			if(!Util.hasDocInMap(docID)) {
-				String title = doc.getField(FieldNames.TITLE)[0];
-				String content = doc.getField(FieldNames.CONTENT)[0];
+				String title = null, content = null;
+				if (Util.isValidArray(doc.getField(FieldNames.TITLE))){
+					title = doc.getField(FieldNames.TITLE)[0];
+				}
+				if (Util.isValidArray(doc.getField(FieldNames.CONTENT))){
+					content = doc.getField(FieldNames.CONTENT)[0];
+				}
 				TokenStream titleTokenStream = null, termTokenStream = null;
 
 				/* Tokenize the parsed fields */
@@ -164,22 +169,30 @@ public class IndexWriter {
 	}
 
 	private static void handleCategoryIndex(Document doc) {
-		String currentCategory = doc.getField(FieldNames.CATEGORY)[0];
+		String currentCategory = null; 
+		if (Util.isValidArray(doc.getField(FieldNames.CATEGORY))){
+			currentCategory = doc.getField(FieldNames.CATEGORY)[0];
+		}
 		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
-		if(categoryIndex.containsKey(currentCategory)) {
-			List<Long> list = categoryIndex.get(currentCategory);
-			if(!list.contains(docID)) {
+		if (Util.isValidString(currentCategory)){
+			if(categoryIndex.containsKey(currentCategory)) {
+				List<Long> list = categoryIndex.get(currentCategory);
+				if(!list.contains(docID)) {
+					list.add(docID);
+				}
+			} else {
+				List<Long> list = new LinkedList<Long>();
 				list.add(docID);
+				categoryIndex.put(currentCategory, list);
 			}
-		} else {
-			List<Long> list = new LinkedList<Long>();
-			list.add(docID);
-			categoryIndex.put(currentCategory, list);
 		}
 	}
 
 	private static void handlePlaceIndex(Document doc) {
-		String currentPlace = doc.getField(FieldNames.PLACE)[0];
+		String currentPlace = null;
+		if (Util.isValidArray(doc.getField(FieldNames.PLACE))){
+			currentPlace = doc.getField(FieldNames.PLACE)[0];
+		}
 		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
 		if(Util.isValidString(currentPlace)) {
 			if(placeIndex.containsKey(currentPlace)) {
@@ -210,7 +223,7 @@ public class IndexWriter {
 		PrintWriter writer = null;
 		try {
 			if(termIndex != null) {
-				File termIndexFile = new File(indexWriteDir + "/term.txt");
+				File termIndexFile = new File(indexWriteDir + Util.termIndexFile);
 				termIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(termIndexFile)));
 				writeToFile(writer, termIndex);
@@ -218,7 +231,7 @@ public class IndexWriter {
 			}
 
 			if(categoryIndex != null) {
-				File categoryIndexFile = new File(indexWriteDir + "/category.txt");
+				File categoryIndexFile = new File(indexWriteDir + Util.categoryIndexFile);
 				categoryIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(categoryIndexFile)));
 				writeToFile(writer, categoryIndex);
@@ -226,7 +239,7 @@ public class IndexWriter {
 			}
 
 			if(authorIndex != null) {
-				File authorIndexFile = new File(indexWriteDir + "/author.txt");
+				File authorIndexFile = new File(indexWriteDir + Util.authorIndexFile);
 				authorIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(authorIndexFile)));
 				writeToFile(writer, authorIndex);
@@ -234,7 +247,7 @@ public class IndexWriter {
 			}
 
 			if(placeIndex != null) {
-				File placeIndexFile = new File(indexWriteDir + "/place.txt");
+				File placeIndexFile = new File(indexWriteDir + Util.placeIndexFile);
 				placeIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(placeIndexFile)));
 				writeToFile(writer, placeIndex);
@@ -242,7 +255,7 @@ public class IndexWriter {
 			}
 			
 			if(termOccurrence != null) {
-				File termOccurrenceFile = new File(indexWriteDir + "/termoccur.txt");
+				File termOccurrenceFile = new File(indexWriteDir + Util.termOccurenceFile);
 				termOccurrenceFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(termOccurrenceFile)));
 				Iterator<Entry<String, Map<Long, Long>>> iterator = termOccurrence.entrySet().iterator();
@@ -266,7 +279,7 @@ public class IndexWriter {
 
 			Map<String, Long> docIDMap = Util.getDocIDMap();
 			if(docIDMap != null) {
-				File docIndexFile = new File(indexWriteDir + "/doc-dictionary.txt");
+				File docIndexFile = new File(indexWriteDir + Util.docDictionaryFile);
 				docIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(docIndexFile)));
 				Iterator<Entry<String, Long>> iterator = docIDMap.entrySet().iterator();
@@ -277,7 +290,6 @@ public class IndexWriter {
 					postings = postings.replace(", ", ",");
 					writer.write((String) postings + "\n");
 				}
-
 				writer.close();
 			}
 

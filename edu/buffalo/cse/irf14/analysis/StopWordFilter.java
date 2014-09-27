@@ -12,9 +12,9 @@ public class StopWordFilter extends TokenFilter{
 											"its","just","least","let","like","likely","may","me","might","most","must","my",
 											"neither","no","nor","not","of","off","often","on","only","or","other","our","own",
 											"rather","said","say","says","she","should","since","so","some","than","that","the",
-											"their","them","then","there","these","they","this","tis","to","too","twas","us","wants",
-											"was","we","were","what","when","where","which","while","who","whom","why","will","with",
-											"would","yet","you","your"};
+											"their","them","then","there","these","they","through","this","those","to","too","twas","under","up","us","unless", 
+											"until","want", "wants","was","we","were","what","when","where","whether", "which","while","will",
+											"who","whom","why","will","with","within", "without","would","yet","you","your"};
 	
 	public static List<String> stopWordsList = new ArrayList<String>();
 	
@@ -27,7 +27,7 @@ public class StopWordFilter extends TokenFilter{
 	}
 
 	public boolean isStopWord(String word){
-		if(stopWordsList == null) {
+		if(stopWordsList.isEmpty()) {
 			initStopWordsList();
 		}
 		return stopWordsList.contains(word);
@@ -53,7 +53,7 @@ public class StopWordFilter extends TokenFilter{
 	}
 
 	public static void initStopWordsList() {
-		if(stopWordsList == null) {
+		if(stopWordsList.isEmpty()) {
 			for(String stopWord : stopWordsArray) {
 				stopWordsList.add(stopWord);
 			}
