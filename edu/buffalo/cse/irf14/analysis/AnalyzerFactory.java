@@ -45,8 +45,29 @@ public class AnalyzerFactory {
 	 * null otherwise
 	 */
 	public Analyzer getAnalyzerForField(FieldNames fieldName, TokenStream stream) {
-		ContentAnalyser contentAnalyser = new ContentAnalyser();
-		contentAnalyser.setStream(stream);
-		return contentAnalyser;
-	}
+		switch (fieldName){
+		case CONTENT: {
+			ContentAnalyser contentAnalyser = new ContentAnalyser();
+			contentAnalyser.setStream(stream);
+			return contentAnalyser;
+			}
+		case AUTHOR : {
+			DefaultAnalyzer defaultAnalyser = new DefaultAnalyzer();
+			defaultAnalyser.setStream(stream);
+			return defaultAnalyser;		
+		}
+		case CATEGORY: {
+			DefaultAnalyzer defaultAnalyser = new DefaultAnalyzer();
+			defaultAnalyser.setStream(stream);
+			return defaultAnalyser;
+		}
+		case PLACE: {
+			PlaceAnalyser placeAnalyser = new PlaceAnalyser();
+			placeAnalyser.setStream(stream);
+			return placeAnalyser;
+		}
+		default: return null;
+		}
+		}
 }
+
