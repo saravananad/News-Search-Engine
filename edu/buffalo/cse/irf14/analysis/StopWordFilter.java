@@ -42,7 +42,7 @@ public class StopWordFilter extends TokenFilter{
 		if (token != null && Util.isValidString(token.getTermText())) {
 			if (isStopWord(token.getTermText().toLowerCase())){
 				tokenStream.remove();
-			}		
+			}
 		}
 		return true;
 	}

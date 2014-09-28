@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,8 +41,9 @@ public class IndexWriter {
 	private static Map<String, List<Long>> categoryIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, List<Long>> placeIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, Map<Long,Long>> termOccurrence = new TreeMap<String, Map<Long,Long>>();
-	
+
 	private Tokenizer tokenizer = new Tokenizer();
+	private Tokenizer author_tokenizer = new Tokenizer("\\s+[a|A]nd\\s+");
 
 	private String indexWriteDir = null;
 
@@ -59,16 +61,36 @@ public class IndexWriter {
 	 */
 	public void addDocument(Document doc) throws IndexerException {
 		try {
-			String docID = doc.getField(FieldNames.FILEID)[0];
-			if(!Util.hasDocInMap(docID)) {
-				String title = null, content = null;
+			String fileID = doc.getField(FieldNames.FILEID)[0];
+			String category = null;
+			if (Util.isValidArray(doc.getField(FieldNames.CATEGORY))){
+				category = doc.getField(FieldNames.CATEGORY)[0];
+			}
+			AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
+			long currentDocID = -1; //Initialized in the later part so that we don't make entry in the map. This filter will not run if initialized here.
+			TokenStream categoryTokenStream = null;
+			if(category != null) {
+				Analyzer categoryAnalyser = analyzerFactory.getAnalyzerForField(FieldNames.CATEGORY, categoryTokenStream);
+				while(categoryAnalyser.increment()) {}
+				categoryTokenStream = categoryAnalyser.getStream();
+			}
+
+			if(!Util.hasDocInMap(fileID)) {
+				String title = null, content = null, author = null, place = null;
 				if (Util.isValidArray(doc.getField(FieldNames.TITLE))){
 					title = doc.getField(FieldNames.TITLE)[0];
 				}
 				if (Util.isValidArray(doc.getField(FieldNames.CONTENT))){
 					content = doc.getField(FieldNames.CONTENT)[0];
 				}
-				TokenStream titleTokenStream = null, termTokenStream = null;
+				if(Util.isValidArray(doc.getField(FieldNames.AUTHOR))) {
+					author = doc.getField(FieldNames.AUTHOR)[0];
+				}
+				if(Util.isValidArray(doc.getField(FieldNames.PLACE))) {
+					place = doc.getField(FieldNames.PLACE)[0];
+				}
+
+				TokenStream titleTokenStream = null, termTokenStream = null,authorTokenStream = null, placeTokenStream = null;
 
 				/* Tokenize the parsed fields */
 				if (title != null && Util.isValidString(title)) {
@@ -79,23 +101,53 @@ public class IndexWriter {
 					termTokenStream = tokenizer.consume(content);
 				}
 
+				if(author != null && Util.isValidString(author)) {
+					authorTokenStream = author_tokenizer.consume(author);
+				}
+
+				if(place != null && Util.isValidString(place)) {
+					placeTokenStream = tokenizer.consume(place);
+				}
+
+				if(authorTokenStream != null) {
+					Analyzer authorAnalyser = analyzerFactory.getAnalyzerForField(FieldNames.AUTHOR, authorTokenStream);
+					while(authorAnalyser.increment()) {}
+					authorTokenStream = authorAnalyser.getStream();
+				}
+
+				if(placeTokenStream != null) {
+					Analyzer placeAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.PLACE, placeTokenStream);
+					while(placeAnalyzer.increment()) {}
+					placeTokenStream = placeAnalyzer.getStream();
+				}
+
 				if (termTokenStream != null){
 					if (titleTokenStream != null) {
 						titleTokenStream.toLowerCase();
 						termTokenStream.append(titleTokenStream);
 					}
 
-					AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
 					Analyzer contentAnalyzer = analyzerFactory.getAnalyzerForField(FieldNames.CONTENT, termTokenStream);
-					contentAnalyzer.increment();
+					while(contentAnalyzer.increment()) {}
 					termTokenStream = contentAnalyzer.getStream();		
 				}
 				//Index Creation
-				createTermIndex(doc, termTokenStream);
-				handleAuthorIndex(doc);
-				handlePlaceIndex(doc);
+				Map<FieldNames,TokenStream> map = new HashMap<FieldNames, TokenStream>();
+				map.put(FieldNames.CONTENT, termTokenStream);
+				if(authorTokenStream != null) {
+					map.put(FieldNames.AUTHOR, authorTokenStream);
+				}
+				if(placeTokenStream != null) {
+					map.put(FieldNames.PLACE, placeTokenStream);
+				}
+				currentDocID = Util.getDocID(fileID);
+				createIndex(currentDocID, map);
 			}
-			handleCategoryIndex(doc);
+			
+			if(currentDocID == -1) {
+				currentDocID = Util.getDocID(fileID);
+			}
+			handleCategoryIndex(currentDocID, categoryTokenStream);
 		} catch (TokenizerException te) {
 			System.err.println(te);
 		} 
@@ -110,10 +162,21 @@ public class IndexWriter {
 		handleFileWrite(indexWriteDir);
 	}
 
-	private static void createTermIndex(Document doc, TokenStream tokenStream) {
-		String docName = doc.getField(FieldNames.FILEID)[0];
-		long docID = Util.getDocID(docName);
-		handleTermIndex(docID, tokenStream);
+	private static void createIndex(long currentDocID, Map<FieldNames, TokenStream> tokenStreamMap) {
+		Iterator<Entry<FieldNames, TokenStream>> iterator = tokenStreamMap.entrySet().iterator();
+		while(iterator.hasNext()) {
+			Entry<FieldNames, TokenStream> next = iterator.next();
+			FieldNames field = next.getKey();
+			TokenStream tokenStream = next.getValue();
+			if(FieldNames.CONTENT == field) {
+				handleTermIndex(currentDocID, tokenStream);
+			} else if(FieldNames.AUTHOR == field) {
+				handleAuthorIndex(currentDocID, tokenStream);
+			} else {
+				handlePlaceIndex(currentDocID, tokenStream);
+			}
+		}
+
 	}
 
 	private static void handleTermIndex(long currentDocID, TokenStream tokenStream) {
@@ -126,19 +189,19 @@ public class IndexWriter {
 						if(!docList.contains(currentDocID)) {
 							docList.add(currentDocID);
 						}
-						
+
 						// Term Occurrence 
 						Map<Long, Long> termOccurrenceMap = termOccurrence.get(token.toString());
 						Long occurrence = termOccurrenceMap.get(currentDocID);
 						occurrence = occurrence == null ? 1L : ++occurrence;
-						
+
 						termOccurrenceMap.put(Long.valueOf(currentDocID), occurrence);
 						termOccurrence.put(token.toString(), termOccurrenceMap);
 					} else {
 						List<Long> list = new LinkedList<Long>();
 						list.add(currentDocID);
 						termIndex.put(token.toString(), list);
-						
+
 						//Term Occurrence
 						Map<Long, Long> termOccurrenceMap = new TreeMap<Long, Long>();
 						termOccurrenceMap.put(currentDocID, 1L);
@@ -149,62 +212,63 @@ public class IndexWriter {
 		}
 	}
 
-	private static void handleAuthorIndex(Document doc) {
-		String authors[] = doc.getField(FieldNames.AUTHOR);
-		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
-		if(authors != null && authors.length > 0) {
-			for(String author : authors) {
-				if(authorIndex.containsKey(author)) {
-					List<Long> list = authorIndex.get(author);
-					if(!list.contains(author)) {
-						list.add(docID);
+	private static void handleAuthorIndex(long currentDocID, TokenStream tokenStream) {
+		if(tokenStream != null && currentDocID != -1) {
+			while(tokenStream.hasNext()) {
+				Token token = tokenStream.next();
+				if(token != null && Util.isValidString(token.toString())) {
+					if(authorIndex.containsKey(token.toString())) {
+						List<Long> list = authorIndex.get(token.toString());
+						if(!list.contains(token.toString())) {
+							list.add(currentDocID);
+						}
+					} else {
+						List<Long> list = new LinkedList<Long>();
+						list.add(currentDocID);
+						authorIndex.put(token.toString(), list);
 					}
-				} else {
-					List<Long> list = new LinkedList<Long>();
-					list.add(docID);
-					authorIndex.put(author, list);
 				}
 			}
 		}
 	}
 
-	private static void handleCategoryIndex(Document doc) {
-		String currentCategory = null; 
-		if (Util.isValidArray(doc.getField(FieldNames.CATEGORY))){
-			currentCategory = doc.getField(FieldNames.CATEGORY)[0];
-		}
-		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
-		if (Util.isValidString(currentCategory)){
-			if(categoryIndex.containsKey(currentCategory)) {
-				List<Long> list = categoryIndex.get(currentCategory);
-				if(!list.contains(docID)) {
-					list.add(docID);
+	private static void handleCategoryIndex(long currentDocID, TokenStream tokenStream) {
+		if(tokenStream != null && currentDocID != -1) {
+			while(tokenStream.hasNext()) {
+				Token token = tokenStream.next();
+				if(token != null && Util.isValidString(token.toString())) {
+					if(categoryIndex.containsKey(token.toString())) {
+						List<Long> list = categoryIndex.get(token.toString());
+						if(!list.contains(currentDocID)) {
+							list.add(currentDocID);
+						}
+					} else {
+						List<Long> list = new LinkedList<Long>();
+						list.add(currentDocID);
+						categoryIndex.put(token.toString(), list);
+					}
 				}
-			} else {
-				List<Long> list = new LinkedList<Long>();
-				list.add(docID);
-				categoryIndex.put(currentCategory, list);
 			}
 		}
 	}
 
-	private static void handlePlaceIndex(Document doc) {
-		String currentPlace = null;
-		if (Util.isValidArray(doc.getField(FieldNames.PLACE))){
-			currentPlace = doc.getField(FieldNames.PLACE)[0];
-		}
-		long docID = Util.getDocID(doc.getField(FieldNames.FILEID)[0]);
-		if(Util.isValidString(currentPlace)) {
-			if(placeIndex.containsKey(currentPlace)) {
-				List<Long> list = placeIndex.get(currentPlace);
-				if(!list.contains(docID)) {
-					list.add(docID);
+	private static void handlePlaceIndex(long currentDocID, TokenStream tokenStream) {
+		if(tokenStream != null && currentDocID != -1) {
+			while(tokenStream.hasNext()) {
+				Token token = tokenStream.next();
+				if(token != null && Util.isValidString(token.toString())) {
+					if(placeIndex.containsKey(token.toString())) {
+						List<Long> list = placeIndex.get(token.toString());
+						if(!list.contains(currentDocID)) {
+							list.add(currentDocID);
+						}
+					} else {
+						List<Long> list = new LinkedList<Long>();
+						list.add(currentDocID);
+						placeIndex.put(token.toString(), list);
+					}
 				}
-			} else {
-				List<Long> list = new LinkedList<Long>();
-				list.add(docID);
-				placeIndex.put(currentPlace, list);
-			}			
+			}
 		}
 	}
 
@@ -218,7 +282,7 @@ public class IndexWriter {
 			writer.write((String) postings + "\n");
 		}
 	}
-	
+
 	public static void handleFileWrite(String indexWriteDir) {
 		PrintWriter writer = null;
 		try {
@@ -253,7 +317,7 @@ public class IndexWriter {
 				writeToFile(writer, placeIndex);
 				writer.close();
 			}
-			
+
 			if(termOccurrence != null) {
 				File termOccurrenceFile = new File(indexWriteDir + Util.termOccurenceFile);
 				termOccurrenceFile.getParentFile().mkdir();

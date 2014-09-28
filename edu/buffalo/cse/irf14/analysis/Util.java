@@ -46,7 +46,7 @@ public class Util {
 	}
 	
 	public static boolean isValidArray(String[] stringArray){
-		return stringArray != null;
+		return stringArray != null && stringArray.length > 0;
 	}
 	
 	public static boolean hasDocInMap(String docName) {

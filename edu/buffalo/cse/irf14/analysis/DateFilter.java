@@ -45,12 +45,6 @@ public class DateFilter extends TokenFilter {
 		if(token != null && Util.isValidString(token.getTermText())) {
 			Token previous = tokenStream.getPrevious();
 			Token next = tokenStream.getNextWithOutMovingPointer();
-			// TODO Not required.. Need to test
-//			while((next == null && tokenStream.getCurrentPosition() + 1 < tokenStream.size()) || (next != null && !Util.isValidString(next.toString()))) {
-//				tokenStream.remove(tokenStream.getCurrentPosition() + 1);
-//				next = tokenStream.getNextWithOutMovingPointer();
-//			}
-
 			if(monthPattern.matcher(token.toString()).matches()) {
 				if(tokenStream.hasPrevious() && isDateOfMonth.matcher(previous.toString()).matches()) {
 					String year = (tokenStream.hasNext() && isYear.matcher(next.toString()).matches()) ? next.toString() : "1900";
@@ -69,7 +63,7 @@ public class DateFilter extends TokenFilter {
 					
 					String year = "1900";
 					boolean addEndindComma = false;
-					if(isYear.matcher(nextOfNext.toString()).matches()) {
+					if(nextOfNext != null && isYear.matcher(nextOfNext.toString()).matches()) {
 						if(nextOfNext.toString().contains(",")) {
 							addEndindComma = true;
 							nextOfNext.setTermText(nextOfNext.toString().replace(",", "").trim());

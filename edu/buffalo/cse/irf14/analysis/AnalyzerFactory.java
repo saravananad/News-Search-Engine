@@ -13,7 +13,7 @@ public class AnalyzerFactory {
 
 	//Single Instance of Analyzer Factory.
 	public static AnalyzerFactory analyserFactory = null;
-	
+
 	/**
 	 * Static method to return an instance of the factory class.
 	 * Usually factory classes are defined as singletons, i.e. 
@@ -25,14 +25,14 @@ public class AnalyzerFactory {
 	 * during instantiation
 	 * @return An instance of the factory
 	 */
-	
+
 	public static AnalyzerFactory getInstance() {
 		if(analyserFactory == null) {
 			analyserFactory = new AnalyzerFactory();
 		}
 		return analyserFactory;
 	}
-	
+
 	/**
 	 * Returns a fully constructed and chained {@link Analyzer} instance
 	 * for a given {@link FieldNames} field
@@ -46,28 +46,30 @@ public class AnalyzerFactory {
 	 */
 	public Analyzer getAnalyzerForField(FieldNames fieldName, TokenStream stream) {
 		switch (fieldName){
-		case CONTENT: {
-			ContentAnalyser contentAnalyser = new ContentAnalyser();
-			contentAnalyser.setStream(stream);
-			return contentAnalyser;
-			}
-		case AUTHOR : {
-			DefaultAnalyzer defaultAnalyser = new DefaultAnalyzer();
-			defaultAnalyser.setStream(stream);
-			return defaultAnalyser;		
-		}
-		case CATEGORY: {
-			DefaultAnalyzer defaultAnalyser = new DefaultAnalyzer();
-			defaultAnalyser.setStream(stream);
-			return defaultAnalyser;
-		}
-		case PLACE: {
-			PlaceAnalyser placeAnalyser = new PlaceAnalyser();
-			placeAnalyser.setStream(stream);
-			return placeAnalyser;
-		}
+		case CONTENT: return getContentAnalyser(stream);
+		case PLACE: return getPlaceAnalyser(stream);
+		case AUTHOR : 
+		case CATEGORY: return getDefaultAnalyser(stream);
 		default: return null;
 		}
-		}
+	}
+
+	public static Analyzer getContentAnalyser(TokenStream stream) {
+		ContentAnalyser contentAnalyser = new ContentAnalyser();
+		contentAnalyser.setStream(stream);
+		return contentAnalyser;
+	}
+
+	public static Analyzer getDefaultAnalyser(TokenStream stream) {
+		DefaultAnalyzer defaultAnalyser = new DefaultAnalyzer();
+		defaultAnalyser.setStream(stream);
+		return defaultAnalyser;
+	}
+	
+	public static Analyzer getPlaceAnalyser(TokenStream stream) {
+		PlaceAnalyser placeAnalyser = new PlaceAnalyser();
+		placeAnalyser.setStream(stream);
+		return placeAnalyser;
+	}
 }
 
