@@ -42,7 +42,7 @@ public class Util {
 	}
 	
 	public static boolean isValidString(String value) {
-		return value != null && !"".equals(value.trim()) && !"null".equalsIgnoreCase(value.trim());
+		return value != null && !"".equals(value.trim());
 	}
 	
 	public static boolean isValidArray(String[] stringArray){
