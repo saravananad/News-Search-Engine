@@ -288,8 +288,13 @@ public class IndexWriter {
 		}
 	}
 
-	public static void handleFileWrite(String indexWriteDir) {
+	public static void handleFileWrite(String indexWriteDir) throws IndexerException {
 		PrintWriter writer = null;
+		
+		if(!Util.isValidString(indexWriteDir)) {
+			throw new IndexerException("Invalid directory path given");
+		}
+		
 		try {
 			if(termIndex != null) {
 				File termIndexFile = new File(indexWriteDir + File.separator + Util.termIndexFile);
