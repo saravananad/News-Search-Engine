@@ -116,7 +116,7 @@ public class IndexerTest {
 			while (analyzer.increment()) {
 				
 			}
-			
+			stream = analyzer.getStream();
 			stream.reset();
 			return stream.next().toString();
 		} catch (TokenizerException e) {
@@ -141,6 +141,7 @@ public class IndexerTest {
 		
 		for (int i = 0; i < 3; i++) {
 			topK = reader.getTopK(i + 1);
+			
 			assertNotNull(topK);
 			assertEquals(i + 1, topK.size(), 0);
 			
