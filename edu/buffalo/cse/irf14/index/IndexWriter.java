@@ -69,6 +69,10 @@ public class IndexWriter {
 			AnalyzerFactory analyzerFactory = AnalyzerFactory.getInstance();
 			long currentDocID = -1; //Initialized in the later part so that we don't make entry in the map. This filter will not run if initialized here.
 			TokenStream categoryTokenStream = null;
+			if (category != null && Util.isValidString(category)){
+				categoryTokenStream = tokenizer.consume(category);
+			}
+			
 			if(category != null) {
 				Analyzer categoryAnalyser = analyzerFactory.getAnalyzerForField(FieldNames.CATEGORY, categoryTokenStream);
 				while(categoryAnalyser.increment()) {}
