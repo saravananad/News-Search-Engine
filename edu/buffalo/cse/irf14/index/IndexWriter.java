@@ -287,7 +287,7 @@ public class IndexWriter {
 		PrintWriter writer = null;
 		try {
 			if(termIndex != null) {
-				File termIndexFile = new File(indexWriteDir + Util.termIndexFile);
+				File termIndexFile = new File(indexWriteDir + File.separator + Util.termIndexFile);
 				termIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(termIndexFile)));
 				writeToFile(writer, termIndex);
@@ -295,7 +295,7 @@ public class IndexWriter {
 			}
 
 			if(categoryIndex != null) {
-				File categoryIndexFile = new File(indexWriteDir + Util.categoryIndexFile);
+				File categoryIndexFile = new File(indexWriteDir + File.separator + Util.categoryIndexFile);
 				categoryIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(categoryIndexFile)));
 				writeToFile(writer, categoryIndex);
@@ -303,7 +303,7 @@ public class IndexWriter {
 			}
 
 			if(authorIndex != null) {
-				File authorIndexFile = new File(indexWriteDir + Util.authorIndexFile);
+				File authorIndexFile = new File(indexWriteDir + File.separator + Util.authorIndexFile);
 				authorIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(authorIndexFile)));
 				writeToFile(writer, authorIndex);
@@ -311,7 +311,7 @@ public class IndexWriter {
 			}
 
 			if(placeIndex != null) {
-				File placeIndexFile = new File(indexWriteDir + Util.placeIndexFile);
+				File placeIndexFile = new File(indexWriteDir + File.separator + Util.placeIndexFile);
 				placeIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(placeIndexFile)));
 				writeToFile(writer, placeIndex);
@@ -319,7 +319,7 @@ public class IndexWriter {
 			}
 
 			if(termOccurrence != null) {
-				File termOccurrenceFile = new File(indexWriteDir + Util.termOccurenceFile);
+				File termOccurrenceFile = new File(indexWriteDir + File.separator + Util.termOccurenceFile);
 				termOccurrenceFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(termOccurrenceFile)));
 				Iterator<Entry<String, Map<Long, Long>>> iterator = termOccurrence.entrySet().iterator();
@@ -343,7 +343,7 @@ public class IndexWriter {
 
 			Map<String, Long> docIDMap = Util.getDocIDMap();
 			if(docIDMap != null) {
-				File docIndexFile = new File(indexWriteDir + Util.docDictionaryFile);
+				File docIndexFile = new File(indexWriteDir + File.separator + Util.docDictionaryFile);
 				docIndexFile.getParentFile().mkdir();
 				writer = new PrintWriter(new BufferedWriter(new FileWriter(docIndexFile)));
 				Iterator<Entry<String, Long>> iterator = docIDMap.entrySet().iterator();

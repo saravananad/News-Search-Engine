@@ -28,7 +28,7 @@ public class IndexReader {
 	private Map<String, String> documentIDMap = new HashMap<String, String>();
 	private static Map<String, List<String>> termMapping = new TreeMap<String, List<String>>();
 	private static Map<String, List<String>> authorMapping= new TreeMap<String, List<String>>();
-	private static Map<String, String> categoryMapping = new HashMap<String, String>();
+	private static Map<String, List<String>> categoryMapping = new HashMap<String, List<String>>();
 	private static Map<String, List<String>> placeMapping = new TreeMap<String, List<String>>();
 	private static Map<String, Map<String, Integer>> termOccurrence = new TreeMap<String, Map<String, Integer>>();	
 	private static Map<Integer, List<String>> termTotalOccurence = new TreeMap<Integer, List<String>>();
@@ -46,7 +46,7 @@ public class IndexReader {
 		try {
 			
 			/* Create a document dictionary*/
-			BufferedReader dictionaryReader = new BufferedReader(new FileReader(new File(this.indexDirectory + Util.docDictionaryFile)));
+			BufferedReader dictionaryReader = new BufferedReader(new FileReader(new File(this.indexDirectory + File.separator + Util.docDictionaryFile)));
 			String line = dictionaryReader.readLine();
 			while ((line)!= null){
 				String[] docIDPair = line.split(":");
@@ -56,7 +56,7 @@ public class IndexReader {
 			dictionaryReader.close();
 			
 			/* Create a term occurrence dictionary */
-			BufferedReader occurenceReader = new BufferedReader(new FileReader(new File (this.indexDirectory + Util.termOccurenceFile)));
+			BufferedReader occurenceReader = new BufferedReader(new FileReader(new File (this.indexDirectory + File.separator + Util.termOccurenceFile)));
 			String occurenceLine = occurenceReader.readLine();
 			while (occurenceLine != null){
 				int totalOcc = 0;
@@ -72,7 +72,14 @@ public class IndexReader {
 					innerMap.put(documentIDMap.get(docIdOccurence[0]), Integer.parseInt(docIdOccurence[1]));
 				}
 				termOccurrence.put(tokenText, innerMap); // Mapping of Token : Doc ID - Occurrence in each document 
-				termTotalOccurence.put(totalOcc, tokenList); // Mapping of occurrence - list of tokens 
+				if (termTotalOccurence.containsKey(totalOcc)){
+					List<String> eachTokenList = termTotalOccurence.get(totalOcc);
+					eachTokenList.add(tokenText);
+					termTotalOccurence.put(totalOcc, eachTokenList);
+				}
+				else {
+					termTotalOccurence.put(totalOcc, tokenList);	
+				}  
 				occurenceLine = occurenceReader.readLine();	
 			}
 			occurenceReader.close();
@@ -84,7 +91,7 @@ public class IndexReader {
 		switch (type) {
 		case AUTHOR: {
 			try {
-				BufferedReader authorIndexReader = new BufferedReader(new FileReader(new File(this.indexDirectory + Util.authorIndexFile)));
+				BufferedReader authorIndexReader = new BufferedReader(new FileReader(new File(this.indexDirectory + File.separator + Util.authorIndexFile)));
 				String eachLine = authorIndexReader.readLine();
 				while (eachLine != null){
 					String[] authorPostingPair = eachLine.split(":");
@@ -105,7 +112,7 @@ public class IndexReader {
 		
 		case TERM: {
 			try {
-				BufferedReader termIndexReader = new BufferedReader(new FileReader(new File(this.indexDirectory + Util.termIndexFile)));
+				BufferedReader termIndexReader = new BufferedReader(new FileReader(new File(this.indexDirectory + File.separator + Util.termIndexFile)));
 				String eachLine = termIndexReader.readLine();
 				while (eachLine != null){
 					String[] termPostingPair = eachLine.split(":");
@@ -126,7 +133,7 @@ public class IndexReader {
 		
 		case PLACE: {
 			try {
-				BufferedReader placeIndexReader = new BufferedReader(new FileReader(new File(this.indexDirectory + Util.placeIndexFile)));
+				BufferedReader placeIndexReader = new BufferedReader(new FileReader(new File(this.indexDirectory + File.separator + Util.placeIndexFile)));
 				String eachLine = placeIndexReader.readLine();
 				while (eachLine != null){
 					String[] placePostingPair = eachLine.split(":");
@@ -147,11 +154,16 @@ public class IndexReader {
 		
 		case CATEGORY: {
 			try {
-				BufferedReader categoryIndexReader = new BufferedReader(new FileReader(new File(this.indexDirectory + Util.categoryIndexFile)));
+				BufferedReader categoryIndexReader = new BufferedReader(new FileReader(new File(this.indexDirectory + File.separator +  Util.categoryIndexFile)));
 				String eachLine = categoryIndexReader.readLine();
 				while (eachLine != null){
 					String[] categoryPostingPair = eachLine.split(":");
-					categoryMapping.put(categoryPostingPair[0], categoryPostingPair[1]);
+					List<String> postingsList = new ArrayList<String>();
+					String[] postings = categoryPostingPair[1].split(",");
+					for (String docID : postings){
+						postingsList.add(docID);
+					}
+					categoryMapping.put(categoryPostingPair[0], postingsList);
 					eachLine = categoryIndexReader.readLine();
 				}
 				categoryIndexReader.close();
@@ -163,6 +175,51 @@ public class IndexReader {
 		}
 	}
 	
+	public int getKeySetSize(Map<String, List<String>> map){
+		Set<String> totalValueSet = new HashSet<String>();
+		for(Map.Entry<String, List<String>> entry : map.entrySet()) {
+			List<String> postings = entry.getValue();
+			for (String docID : postings){
+				totalValueSet.add(docID);
+			}
+		}
+		return totalValueSet.size();
+	}
+
+	public Map<String, Integer> buildPostingsMap(Map<String, List<String>> map, String term, int occurrence){
+		Map<String, Integer> postings = new HashMap<String,Integer>();
+		List<String> docList = map.get(term);
+		for (String docID : docList){
+			postings.put(documentIDMap.get(docID), occurrence);
+		}
+		return postings;
+	}
+	
+	public List<String> buildOccurrenceMap(Map<String, List<String>> map){
+		Map<Integer, List<String>> occurrenceMap = new TreeMap<Integer, List<String>>(Collections.reverseOrder());	
+		List<String> totalArrayList = new ArrayList<String>();
+		for(Map.Entry<String, List<String>> entry : map.entrySet()) {
+			List<String> tokensList = new ArrayList<String>();
+			tokensList.add(entry.getKey());
+			int total = entry.getValue().size();
+			if (occurrenceMap.containsKey(total)){
+				List<String> tokenList = occurrenceMap.get(total);
+				tokenList.add(entry.getKey());
+				occurrenceMap.put(total, tokenList);
+			}
+			else {
+				occurrenceMap.put(total, tokensList);			
+			}
+		}
+		for (Map.Entry<Integer, List<String>> entry : occurrenceMap.entrySet()) {
+			List<String> eachList = entry.getValue();
+			for (String token : eachList){
+				totalArrayList.add(token);
+			}
+		}
+		return totalArrayList;
+	}
+	
 	/**
 	 * Get total number of terms from the "key" dictionary associated with this 
 	 * index. A postings list is always created against the "key" dictionary
@@ -170,10 +227,14 @@ public class IndexReader {
 	 */
 	public int getTotalKeyTerms() {
 		switch (indexType){
-		case AUTHOR: return authorMapping.size();
-		case TERM: return termMapping.size();
-		case CATEGORY: return categoryMapping.size();
-		case PLACE: return placeMapping.size();
+		case AUTHOR: 
+			return authorMapping.size();
+		case TERM: 
+			return termMapping.size();
+		case CATEGORY: 
+			return categoryMapping.size();
+		case PLACE: 
+			return placeMapping.size();
 		default:
 			return -1;
 		}
@@ -185,41 +246,15 @@ public class IndexReader {
 	 * @return The total number of terms
 	 */
 	public int getTotalValueTerms() {
-		Set<String> totalValueSet = new HashSet<String>();
 		switch (indexType){
-		case AUTHOR: {
-			for(Map.Entry<String, List<String>> entry : authorMapping.entrySet()) {
-				List<String> postings = entry.getValue();
-				for (String docID : postings){
-					totalValueSet.add(docID);
-				}
-			}
-			return totalValueSet.size();		
-		}
-		case TERM: {
-			for(Map.Entry<String, List<String>> entry : termMapping.entrySet()) {
-				List<String> postings = entry.getValue();
-				for (String docID : postings){
-					totalValueSet.add(docID);
-				}
-			}
-			return totalValueSet.size();	
-		}
-		case CATEGORY: {
-			for(Map.Entry<String, String> entry : categoryMapping.entrySet()) {
-				totalValueSet.add(entry.getValue());
-			}
-			return totalValueSet.size();	
-		}
-		case PLACE: {
-			for(Map.Entry<String, List<String>> entry : placeMapping.entrySet()) {
-				List<String> postings = entry.getValue();
-				for (String docID : postings){
-					totalValueSet.add(docID);
-				}
-			}
-			return totalValueSet.size();	
-		}
+		case AUTHOR: 
+			return getKeySetSize(authorMapping);
+		case TERM: 
+			return getKeySetSize(termMapping);
+		case CATEGORY: 
+			return getKeySetSize(categoryMapping);
+		case PLACE: 
+			return getKeySetSize(placeMapping);
 		default: return -1;
 		}
 	}
@@ -237,6 +272,12 @@ public class IndexReader {
 			switch (indexType){
 			case TERM: 
 				return (termOccurrence.containsKey(term)) ? termOccurrence.get(term) : null;
+			case CATEGORY:
+				return (buildPostingsMap(categoryMapping, term, 0));
+			case AUTHOR: 
+				return (buildPostingsMap(authorMapping, term, 1));
+			case PLACE:
+				return (buildPostingsMap(placeMapping, term, 1));
 			default : return null;
 			}
 		}
@@ -265,13 +306,16 @@ public class IndexReader {
 			return (k > 0 && k <= totalArrayList.size()) ? totalArrayList.subList(0, k) : null;
 		}
 		case AUTHOR:{
-			
+			List<String> totalArrayList = buildOccurrenceMap(authorMapping);
+			return (k > 0 && k <= totalArrayList.size()) ? totalArrayList.subList(0, k) : null;	
 		}
 		case PLACE: {
-			
+			List<String> totalArrayList = buildOccurrenceMap(placeMapping);
+			return (k > 0 && k <= totalArrayList.size()) ? totalArrayList.subList(0, k) : null;			
 		}
 		case CATEGORY:{
-			
+			List<String> totalArrayList = buildOccurrenceMap(categoryMapping);
+			return (k > 0 && k <= totalArrayList.size()) ? totalArrayList.subList(0, k) : null;				
 		}
 		}
 		return null;

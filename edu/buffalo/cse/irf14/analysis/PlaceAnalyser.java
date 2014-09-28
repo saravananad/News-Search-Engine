@@ -8,7 +8,7 @@ package edu.buffalo.cse.irf14.analysis;
  *
  */
 public class PlaceAnalyser implements Analyzer {
-	public static final String[] placeFilters = {TokenFilterType.SYMBOL.name(), TokenFilterType.SPECIALCHARS.name(), TokenFilterType.NUMERIC.name()};
+	public static final String[] placeFilters = {TokenFilterType.SPECIALCHARS.name()};
 	
 	private TokenStream tokenStream = null;
 

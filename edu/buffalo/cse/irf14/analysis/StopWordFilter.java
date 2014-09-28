@@ -46,12 +46,6 @@ public class StopWordFilter extends TokenFilter{
 		}
 		return true;
 	}
-
-	@Override
-	public TokenStream getStream() {
-		return tokenStream;
-	}
-
 	public static void initStopWordsList() {
 		if(stopWordsList.isEmpty()) {
 			for(String stopWord : stopWordsArray) {
