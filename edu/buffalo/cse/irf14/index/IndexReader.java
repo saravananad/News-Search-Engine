@@ -64,7 +64,6 @@ public class IndexReader {
 				List<String> tokenList = new ArrayList<String>();
 				String[] eachLine = occurenceLine.split(Util.dictionaryDelimiter);
 				String tokenText = eachLine[0];
-				tokenList.add(tokenText);
 				String[] docIdOccurenceArray = eachLine[1].split(Util.occurenceDelimiter);
 				for (String occurence : docIdOccurenceArray){
 					String[] docIdOccurence = occurence.split(Util.invidualDoc_OccurDelimiter);
@@ -74,10 +73,15 @@ public class IndexReader {
 				termOccurrence.put(tokenText, innerMap); // Mapping of Token : Doc ID - Occurrence in each document 
 				if (termTotalOccurence.containsKey(totalOcc)){
 					List<String> eachTokenList = termTotalOccurence.get(totalOcc);
-					eachTokenList.add(tokenText);
+					if (!eachTokenList.contains(tokenText)){
+						eachTokenList.add(tokenText);
+					}
 					termTotalOccurence.put(totalOcc, eachTokenList);
 				}
 				else {
+					if (!tokenList.contains(tokenText)){
+						tokenList.add(tokenText);
+					}
 					termTotalOccurence.put(totalOcc, tokenList);	
 				}  
 				occurenceLine = occurenceReader.readLine();	

@@ -3,12 +3,13 @@
  */
 package edu.buffalo.cse.irf14.analysis;
 
+
 /**
  * @author NaveenKumar
  *
  */
 public class PlaceAnalyser implements Analyzer {
-	public static final String[] placeFilters = {TokenFilterType.SPECIALCHARS.name()};
+	public static final String[] placeFilters = {TokenFilterType.NUMERIC.name(), TokenFilterType.SPECIALCHARS.name(), TokenFilterType.CAPITALIZATION.name()};
 	
 	private TokenStream tokenStream = null;
 

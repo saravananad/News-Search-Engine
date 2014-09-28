@@ -7,7 +7,7 @@ public class SymbolFilter extends TokenFilter {
 	public static final Pattern endOfLineRegex = Pattern.compile("[\\p{Punct}*[\\w|\\d]+[.-]*(\\w|\\d)*]+(\\s)*[\\.|?|!]+\\s*");
 	public static final Pattern ipEndingWithSpecialChars = Pattern.compile("(\\d{1,3}\\.){3}\\d{1,3}[\\.|?|!]+");
 	public static final Pattern hyphenOnlyToken = Pattern.compile("(-)+");
-	public static final Pattern formulaHyphenPattern = Pattern.compile("[A-Z0-9]{1,2}(-)+\\w+");
+	public static final Pattern formulaHyphenPattern = Pattern.compile("\\d*\\.*[A-Z0-9]+(-)+\\w+");
 
 	@Override
 	public boolean increment() throws TokenizerException {

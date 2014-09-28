@@ -43,7 +43,8 @@ public class IndexWriter {
 	private static Map<String, Map<Long,Long>> termOccurrence = new TreeMap<String, Map<Long,Long>>();
 
 	private Tokenizer tokenizer = new Tokenizer();
-	private Tokenizer author_tokenizer = new Tokenizer("\\s+[a|A]nd\\s+");
+	private Tokenizer author_tokenizer = new Tokenizer("\\s+[a|A][n|N][d|D]\\s+");
+	private Tokenizer place_tokenizer = new Tokenizer(",");
 
 	private String indexWriteDir = null;
 
@@ -110,7 +111,7 @@ public class IndexWriter {
 				}
 
 				if(place != null && Util.isValidString(place)) {
-					placeTokenStream = tokenizer.consume(place);
+					placeTokenStream = place_tokenizer.consume(place);
 				}
 
 				if(authorTokenStream != null) {
