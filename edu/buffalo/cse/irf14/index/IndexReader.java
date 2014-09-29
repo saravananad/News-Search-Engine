@@ -31,7 +31,7 @@ public class IndexReader {
 	private static Map<String, List<String>> categoryMapping = new HashMap<String, List<String>>();
 	private static Map<String, List<String>> placeMapping = new TreeMap<String, List<String>>();
 	private static Map<String, Map<String, Integer>> termOccurrence = new TreeMap<String, Map<String, Integer>>();	
-	private static Map<Integer, List<String>> termTotalOccurence = new TreeMap<Integer, List<String>>();
+	private Map<Integer, List<String>> termTotalOccurence = new TreeMap<Integer, List<String>>();
 	
 	/**
 	 * Default constructor
@@ -252,13 +252,13 @@ public class IndexReader {
 	public int getTotalValueTerms() {
 		switch (indexType){
 		case AUTHOR: 
-			return getKeySetSize(authorMapping);
+			return documentIDMap.size();
 		case TERM: 
-			return getKeySetSize(termMapping);
+			return documentIDMap.size();
 		case CATEGORY: 
-			return getKeySetSize(categoryMapping);
+			return documentIDMap.size();
 		case PLACE: 
-			return getKeySetSize(placeMapping);
+			return documentIDMap.size();
 		default: return -1;
 		}
 	}
@@ -336,7 +336,39 @@ public class IndexReader {
 	 * BONUS ONLY
 	 */
 	public Map<String, Integer> query(String...terms) {
-		//TODO : BONUS ONLY
-		return null;
+		Map<String, List<String>> termPostingsMap = new TreeMap<String, List<String>>();
+		Map<String, Integer> postingsOccurrencesMap = new HashMap<String, Integer>();
+		Map<String, Integer> postingOccurenceMap = new HashMap<String, Integer>();
+		Map<String, Integer> finalMap = new HashMap<String, Integer>();
+		List<List<String>> listofPostingsLists = new ArrayList<List<String>>();
+		for (String term : terms){
+			List<String> listofFiles = new ArrayList<String>();
+			postingsOccurrencesMap = getPostings(term);
+			for(Map.Entry<String, Integer> entry : postingsOccurrencesMap.entrySet()) {
+				listofFiles.add(entry.getKey());
+			}
+			termPostingsMap.put(term, listofFiles);
+		}
+		
+		for (Map.Entry<String, List<String>> entry : termPostingsMap.entrySet()){
+			listofPostingsLists.add(entry.getValue());
+		}
+		
+		List<String> mergedPostingsList = listofPostingsLists.get(0);
+		
+		for (List<String> postingsList : listofPostingsLists){
+			mergedPostingsList.retainAll(postingsList);
+		}
+		
+		/* Retrieve the total occurrences for all the terms in every file */
+		for (String fileName : mergedPostingsList){
+			int totalOccurences = 0;
+			for (String term : terms){
+				postingOccurenceMap = termOccurrence.get(term);
+				totalOccurences += postingOccurenceMap.get(fileName);
+			}
+			finalMap.put(fileName, totalOccurences);
+		}	
+		return finalMap.isEmpty() ? null : finalMap;
 	}
 }
