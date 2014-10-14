@@ -18,6 +18,14 @@ public class Query {
 	public void add(String singleTerm){
 		searchQuery.add(singleTerm);
 	}
+	
+	public void setQuery(List<String> query) {
+		this.searchQuery = query;
+	}
+	
+	public List<String> getSearchQuery() {
+		return this.searchQuery;
+	}
 	/**
 	 * Method to convert given parsed query into string
 	 */

@@ -33,7 +33,16 @@ public class QueryParser {
 				return true;
 			}
 		}
-		return false;	
+		return false;
+	}
+	
+	public static String getFacetOfTerm(String token) {
+		for (String indexType : indexTypes){
+			if (token.contains(indexType)){
+				return indexType;
+			}
+		}
+		return null;
 	}
 	
 	public static void initOperators() {
@@ -133,7 +142,7 @@ public class QueryParser {
 				addOpenBrace--;
 			}
 			
-			if(addCloseBrace > 0) {
+			while(addCloseBrace > 0) {
 				currentToken += "]";
 				addCloseBrace--;
 			}
@@ -148,6 +157,82 @@ public class QueryParser {
 			}
 		}
 		query.add("}");
+		
+		List<String> searchQuery = query.getSearchQuery();
+		int firstIndex = -1;
+		String firstOper = null;
+		String facet = null;
+		int i = 0;
+		int startingIndex = 0;
+		while(i < searchQuery.size()) {
+			if("{".equals(searchQuery.get(i))) {
+				i++;
+				startingIndex++;
+			}
+			
+			if(isFacetedTerm(searchQuery.get(i))) {
+				if(isOperator(searchQuery.get(i + 1))) {
+					
+					if(searchQuery.get(i).startsWith("[")) {
+						while(i < searchQuery.size()) {
+							if(searchQuery.get(i).contains("]")) {
+								break;
+							}
+							i += 2;
+						}
+						i += 2;
+					} else if(firstIndex == -1 && firstOper == null) {
+						firstIndex = i;
+						firstOper = searchQuery.get(i + 1);
+						facet = getFacetOfTerm(searchQuery.get(i));
+						i += 2;
+					} else {
+						String currentFacet = getFacetOfTerm(searchQuery.get(i));
+						String oper = searchQuery.get(i + 1);
+						if(!currentFacet.equalsIgnoreCase(facet) || !firstOper.equalsIgnoreCase(oper)) {
+							if(firstIndex + 2 < i) {
+								String newTerm = "[" + searchQuery.get(firstIndex);
+								searchQuery.remove(firstIndex);
+								searchQuery.add(firstIndex, newTerm);
+								
+								newTerm = searchQuery.get(i - 2) + "]";
+								searchQuery.remove(i - 2);
+								searchQuery.add(i - 2, newTerm);
+							}
+							firstIndex = -1;
+							firstOper = null;
+							facet = null;
+						} else {
+							i += 2;
+						}
+					}					
+				} else {
+					String currFacet = getFacetOfTerm(searchQuery.get(i));
+					if(facet != null && firstIndex != -1 &&  firstIndex != startingIndex) {
+						if(facet.equalsIgnoreCase(currFacet) && firstIndex + 2 <= i) {
+							String newTerm = "[" + searchQuery.get(firstIndex);
+							searchQuery.remove(firstIndex);
+							searchQuery.add(firstIndex, newTerm);
+							
+							newTerm = searchQuery.get(i) + "]";
+							searchQuery.remove(i);
+							searchQuery.add(i, newTerm);
+						} else if(firstIndex + 2 < i) {
+							String newTerm = "[" + searchQuery.get(firstIndex);
+							searchQuery.remove(firstIndex);
+							searchQuery.add(firstIndex, newTerm);
+							
+							newTerm = searchQuery.get(i - 2) + "]";
+							searchQuery.remove(i - 2);
+							searchQuery.add(i - 2, newTerm);
+						}						
+					}
+					i += 2;
+				}
+			}
+		}
+		
+		query.setQuery(searchQuery);
 		return query;
 	}
 }
