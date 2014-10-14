@@ -122,7 +122,7 @@ public class QueryParser {
 					currentToken = tokenSplit[0] + tokenSplit[1];
 					addOpenBrace++;
 					int next = i + 1;
-					while(next < inputList.size()) {
+					while(next < inputList.size() && !isFacetedTerm(inputList.get(next))) {
 						if(!isOperator(inputList.get(next))) {
 							String token = tokenSplit[0] + inputList.get(next);
 							inputList.remove(next);
