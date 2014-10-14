@@ -5,6 +5,10 @@ import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
 
+import edu.buffalo.cse.irf14.analysis.Util;
+import edu.buffalo.cse.irf14.query.Query;
+import edu.buffalo.cse.irf14.query.QueryParser;
+
 /**
  * Main class to run the searcher.
  * As before implement all TODO methods unless marked for bonus
@@ -14,6 +18,11 @@ import java.util.Map;
 public class SearchRunner {
 	public enum ScoringModel {TFIDF, OKAPI};
 	
+	public String indexDirectory = null;
+	public String corpusDirectory = null;
+	public char mode = ' ';
+	PrintStream stream = null;
+	
 	/**
 	 * Default (and only public) constuctor
 	 * @param indexDir : The directory where the index resides
@@ -21,9 +30,11 @@ public class SearchRunner {
 	 * @param mode : Mode, one of Q or E
 	 * @param stream: Stream to write output to
 	 */
-	public SearchRunner(String indexDir, String corpusDir, 
-			char mode, PrintStream stream) {
-		//TODO: IMPLEMENT THIS METHOD
+	public SearchRunner(String indexDir, String corpusDir, char mode, PrintStream stream) {
+		this.indexDirectory = indexDir;
+		this.corpusDirectory = corpusDir;
+		this.mode = mode;
+		this.stream = stream;
 	}
 	
 	/**
@@ -32,7 +43,8 @@ public class SearchRunner {
 	 * @param model : Scoring Model to use for ranking results
 	 */
 	public void query(String userQuery, ScoringModel model) {
-		//TODO: IMPLEMENT THIS METHOD
+		Query query = QueryParser.parse(userQuery, Util.getDefaultBooleanOperator());
+		System.out.println(query);
 	}
 	
 	/**

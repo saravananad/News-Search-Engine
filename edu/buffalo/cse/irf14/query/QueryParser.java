@@ -5,6 +5,7 @@ package edu.buffalo.cse.irf14.query;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * @author nikhillo
@@ -12,9 +13,20 @@ import java.util.Arrays;
  */
 public class QueryParser {
 
-	static String[] indexTypes = {"Term:", "Author:", "Category:", "Place:"};
-	static String[] operators = {"and", "or", "not"};
+	private static List<String> operators = new ArrayList<String>();
 
+	private static final String AND = "AND";
+	private static final String OR = "OR";
+	private static final String NOT = "NOT";
+	
+	private static final String TERM = "Term:";
+	private static final String AUTHOR = "Author:";
+	private static final String CATEGORY = "Category:";
+	private static final String PLACE = "Place:";
+
+	private static final String[] operatorsArray = { AND, OR, NOT};
+	private static final String[] indexTypes = {TERM, AUTHOR, CATEGORY, PLACE};
+	
 	public static boolean isFacetedTerm(String token){
 		for (String indexType : indexTypes){
 			if (token.contains(indexType)){
@@ -23,9 +35,21 @@ public class QueryParser {
 		}
 		return false;	
 	}
-
+	
+	public static void initOperators() {
+		if(operators.isEmpty()) {
+			for(String oper : operatorsArray) {
+				operators.add(oper);
+			}
+		}
+	}
+	
 	public static boolean isOperator(String token){
-		return (Arrays.asList(operators).contains(token.toLowerCase()));
+		if(operators.isEmpty()) {
+			initOperators();
+		}
+		
+		return operators.contains(token.toUpperCase());
 	}
 
 	/**
@@ -36,126 +60,100 @@ public class QueryParser {
 	 */
 	public static Query parse(String userQuery, String defaultOperator) {
 		Query query = new Query();
-		String[] inputQuery = userQuery.split(" ");
+		String[] input = userQuery.split(" ");
+		ArrayList<String> inputList = new ArrayList<String>(Arrays.asList(input));
+		
 		query.add("{");
-		String indexType = "";
-		boolean isMixedFacetedQuery = false;
-		ArrayList<String> phraseQueryList = new ArrayList<String>();
-		ArrayList<String> multiIndexQuery = new ArrayList<String>();
-		ArrayList<String> tempList = new ArrayList<String>();
-
-		for (int i = 0 ; i < inputQuery.length; i++){
-			String currentToken = inputQuery[i];
-			if (!currentToken.toLowerCase().equals("not")){
-				String transformedToken = currentToken.replaceAll("\\(", "").replaceAll("\\)", "");
-				int countOfLeftBraces = currentToken.length() - currentToken.replaceAll("\\(", "").length();
-				int countOfRightBraces = currentToken.length() - currentToken.replaceAll("\\)", "").length();
-
-				//Handle Phrase Queries of form : "Hello World!", "San Fransisco"
-				if (currentToken.contains("\"") && !currentToken.endsWith("\"")){
-					int j = i + 1;
-					while (j < inputQuery.length){
-						phraseQueryList.add(inputQuery[j]);
-						if (inputQuery[j].endsWith("\""))
-							break;
-						j++;
+		
+		for(int i = 0; i < inputList.size(); i++) {
+			String currentToken = inputList.get(i);
+			boolean isNotQuery = false;
+			boolean addOpenBrace = false;
+			boolean addCloseBrace = false;
+			
+			// Handle Quotes
+			if(currentToken.startsWith("\"")) {
+				int j = i + 1;
+				while(j < inputList.size()) {
+					currentToken += " " + inputList.get(j);
+					inputList.remove(j);
+					if(currentToken.endsWith("\"")) {
+						break;
 					}
 				}
-
-				// Handle the Mixed Facet query of form Category:(movies AND films); Author:(Riggs OR Ryan)
-				if (currentToken.contains("(") && !(currentToken.startsWith("("))){
-					isMixedFacetedQuery = true;
-					indexType = currentToken.substring(0, currentToken.indexOf("(")); //Extract the Index Type
-				}
-
-				// Handle the case sensitivity of operators in the query - AnD, noT, oR 
-				if (isOperator(transformedToken)){
-					transformedToken = transformedToken.toUpperCase();
-				}
-				// Modify the token if the token is not a Faceted term
-				else if (!isFacetedTerm(transformedToken)){
-					if (isMixedFacetedQuery){
-						transformedToken = indexType + transformedToken;
-					}
-					else if (!phraseQueryList.contains(currentToken)){
-						transformedToken = "Term:" + transformedToken;				
-					}
-				}
-
-				// If the tokens of form Term:XYZ occur consecutively, then build an array of those
-				// tokens to group them using square brackets later
-				if (!(isFacetedTerm(currentToken) || isOperator(currentToken))){
-					int k = i + 1;
-					while (k < inputQuery.length){
-						if (!isFacetedTerm(inputQuery[k]) && !isOperator(inputQuery[k])){
-							multiIndexQuery.add(inputQuery[i]);	
-							multiIndexQuery.add(inputQuery[k]);	
+			} else if(currentToken.startsWith("(")) {
+				// Starts with "("
+				currentToken = currentToken.replace("(", "");
+				addOpenBrace = true;
+			} else if(currentToken.equalsIgnoreCase(NOT)) {
+				currentToken = inputList.get(i + 1);
+				inputList.remove(i + 1);
+				isNotQuery = true;
+			}
+			
+			if(currentToken.contains("(")) {
+				String[] tokenSplit = currentToken.split("\\(");
+				if(isFacetedTerm(tokenSplit[0])) {
+					currentToken = tokenSplit[0] + tokenSplit[1];
+					int next = i + 1;
+					boolean isFirstTeam = true;
+					while(next < inputList.size()) {
+						if(NOT.equalsIgnoreCase(inputList.get(next))) {
+							currentToken += " " + AND;
+						} else if(isOperator(inputList.get(next))) {
+							currentToken += " " + inputList.get(next).toUpperCase();
+						} else {
+							String token = tokenSplit[0] + inputList.get(next);
+							currentToken += " " + token;
 						}
-						else
+						
+						if(isFirstTeam) {
+							isFirstTeam = false;
+							currentToken = "[" + currentToken;
+						}
+						
+						inputList.remove(next);
+						if(currentToken.endsWith(")")) {
 							break;
-						k++;
-					}
-					if (!multiIndexQuery.isEmpty()){
-						tempList = new ArrayList<String>(multiIndexQuery);
-						if (currentToken.equals(multiIndexQuery.get(multiIndexQuery.size() - 1))){
-							multiIndexQuery.clear();
 						}
 					}
 				}
+			}
 
-				// To end the Mixed Facet query
-				if (currentToken.contains(")"))
-					isMixedFacetedQuery = false;
-
-				// Replace the NOT term with AND <term>
-				if (!isOperator(transformedToken) && ((i - 1) > 0)){
-					String previousToken = inputQuery[i - 1];
-					if (previousToken.toLowerCase().equals("not")){
-						transformedToken = "AND <" + transformedToken + ">";
-					}				
+			if (currentToken.endsWith(")")) {
+				// Not handled in else if since the same token can have the close braces.
+				currentToken = currentToken.replace(")", "");
+				addCloseBrace = true;
+			}
+			
+			if(isOperator(currentToken)) {
+				currentToken = currentToken.toUpperCase();
+			} else if(!isFacetedTerm(currentToken)) {
+				currentToken = TERM + currentToken;
+			}
+			
+			if(isNotQuery) {
+				currentToken = "<" + currentToken + ">";
+			}
+			
+			if(addOpenBrace) {
+				currentToken = "[" + currentToken;
+			}
+			
+			if(addCloseBrace) {
+				currentToken += "]";
+			}
+			
+			query.add(currentToken);
+			if(!isOperator(currentToken) && i+1 < inputList.size()) {
+				if(!isOperator(inputList.get(i + 1))) {
+					query.add(defaultOperator);
+				} else if(NOT.equalsIgnoreCase(inputList.get(i + 1))) {
+					query.add(AND);
 				}
-
-				// Group the terms and enclose them with square brackets
-				if (currentToken.contains("(")){
-					if (!currentToken.startsWith("(")){
-						isMixedFacetedQuery = true;
-					}
-					StringBuilder extra = new StringBuilder();
-					for (int index = 0; index < countOfLeftBraces; index++){
-						extra.append("[");
-					}
-					transformedToken = extra.toString() + transformedToken;
-				}
-				if (currentToken.contains(")")){
-					StringBuilder extra = new StringBuilder();
-					for (int index = 0; index < countOfRightBraces; index++){
-						extra.append("]");
-					}
-					transformedToken = transformedToken + extra.toString();
-				}
-
-				// Group the consecutively occurring tokens of form Term:XYZ using square brackets
-				if (!tempList.isEmpty()){
-					if ((tempList.get(0)).contains(currentToken)){
-						transformedToken = "[" + transformedToken;
-					}
-					if ((tempList.get(tempList.size() - 1).contains(currentToken))){
-						transformedToken = transformedToken + "]";
-					}
-				}
-				query.add(transformedToken);
-
-				// Insert "OR/AND" Operator if the current token and the next token are not any of the operators 
-				if (!isOperator(transformedToken) && ((i + 1) < inputQuery.length)){
-					String nextToken = inputQuery[i + 1];
-					if (!(isOperator(nextToken) || (phraseQueryList.contains(nextToken)))){
-						query.add(defaultOperator);
-					}
-				}		
 			}
 		}
 		query.add("}");
 		return query;
-		//TODO returning NULL
 	}
 }

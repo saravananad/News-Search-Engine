@@ -1,6 +1,7 @@
 package edu.buffalo.cse.irf14.query;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Class that represents a parsed query
@@ -9,7 +10,7 @@ import java.util.ArrayList;
  */
 public class Query {
 	
-	private ArrayList<String> searchQuery = new ArrayList<String>();
+	private List<String> searchQuery = new ArrayList<String>();
 	
 	/**
 	 * Method that adds a query term to the searchQuery list

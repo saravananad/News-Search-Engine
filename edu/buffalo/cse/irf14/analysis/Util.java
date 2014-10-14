@@ -12,12 +12,12 @@ public class Util {
 	public static final String occurenceDelimiter = ";";
 	public static final String invidualDoc_OccurDelimiter = "=";
 	
-	public static String authorIndexFile = "AuthorIndex.txt";
-	public static String termIndexFile = "TermIndex.txt";
-	public static String categoryIndexFile = "CategoryIndex.txt";
-	public static String placeIndexFile = "PlaceIndex.txt";
-	public static String docDictionaryFile = "DocDictionary.txt";
-	public static String termOccurenceFile = "TermOccurence.txt";
+	public static final String authorIndexFile = "AuthorIndex.txt";
+	public static final String termIndexFile = "TermIndex.txt";
+	public static final String categoryIndexFile = "CategoryIndex.txt";
+	public static final String placeIndexFile = "PlaceIndex.txt";
+	public static final String docDictionaryFile = "DocDictionary.txt";
+	public static final String termOccurenceFile = "TermOccurence.txt";
 	
 	public enum FilterList {
 		STOPWORD(StopWordFilter.class.getName()),
@@ -92,5 +92,13 @@ public class Util {
 		public String getValue() {
 			return this.value;
 		}
+	}
+	
+	/************************** Searcher Project Methods *************************************/
+	
+	public static final String defaultOper = "OR";
+	
+	public static String getDefaultBooleanOperator() {
+		return defaultOper;
 	}
 }
