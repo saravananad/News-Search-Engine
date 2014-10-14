@@ -68,10 +68,16 @@ public class QueryParser {
 		for(int i = 0; i < inputList.size(); i++) {
 			String currentToken = inputList.get(i);
 			boolean isNotQuery = false;
-			boolean addOpenBrace = false;
+			int addOpenBrace = 0;
 			boolean addCloseBrace = false;
 			
 			// Handle Quotes
+			if(currentToken.equalsIgnoreCase(NOT)) {
+				currentToken = inputList.get(i + 1);
+				inputList.remove(i + 1);
+				isNotQuery = true;
+			}
+			
 			if(currentToken.startsWith("\"")) {
 				int j = i + 1;
 				while(j < inputList.size()) {
@@ -83,43 +89,10 @@ public class QueryParser {
 				}
 			} else if(currentToken.startsWith("(")) {
 				// Starts with "("
+				addOpenBrace += currentToken.length() - currentToken.replace("(", "").length();
 				currentToken = currentToken.replace("(", "");
-				addOpenBrace = true;
-			} else if(currentToken.equalsIgnoreCase(NOT)) {
-				currentToken = inputList.get(i + 1);
-				inputList.remove(i + 1);
-				isNotQuery = true;
 			}
 			
-			if(currentToken.contains("(")) {
-				String[] tokenSplit = currentToken.split("\\(");
-				if(isFacetedTerm(tokenSplit[0])) {
-					currentToken = tokenSplit[0] + tokenSplit[1];
-					int next = i + 1;
-					boolean isFirstTeam = true;
-					while(next < inputList.size()) {
-						if(NOT.equalsIgnoreCase(inputList.get(next))) {
-							currentToken += " " + AND;
-						} else if(isOperator(inputList.get(next))) {
-							currentToken += " " + inputList.get(next).toUpperCase();
-						} else {
-							String token = tokenSplit[0] + inputList.get(next);
-							currentToken += " " + token;
-						}
-						
-						if(isFirstTeam) {
-							isFirstTeam = false;
-							currentToken = "[" + currentToken;
-						}
-						
-						inputList.remove(next);
-						if(currentToken.endsWith(")")) {
-							break;
-						}
-					}
-				}
-			}
-
 			if (currentToken.endsWith(")")) {
 				// Not handled in else if since the same token can have the close braces.
 				currentToken = currentToken.replace(")", "");
@@ -132,12 +105,32 @@ public class QueryParser {
 				currentToken = TERM + currentToken;
 			}
 			
+			if(currentToken.contains("(")) {
+				String[] tokenSplit = currentToken.split("\\(");
+				if(isFacetedTerm(tokenSplit[0])) {
+					currentToken = tokenSplit[0] + tokenSplit[1];
+					addOpenBrace++;
+					int next = i + 1;
+					while(next < inputList.size()) {
+						if(!isOperator(inputList.get(next))) {
+							String token = tokenSplit[0] + inputList.get(next);
+							inputList.remove(next);
+							inputList.add(next, token);
+							next++;
+						} else {
+							next++;
+						}
+					}
+				}
+			}
+
 			if(isNotQuery) {
 				currentToken = "<" + currentToken + ">";
 			}
 			
-			if(addOpenBrace) {
+			while(addOpenBrace > 0) {
 				currentToken = "[" + currentToken;
+				addOpenBrace--;
 			}
 			
 			if(addCloseBrace) {
