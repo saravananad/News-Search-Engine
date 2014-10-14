@@ -69,7 +69,7 @@ public class QueryParser {
 			String currentToken = inputList.get(i);
 			boolean isNotQuery = false;
 			int addOpenBrace = 0;
-			boolean addCloseBrace = false;
+			int addCloseBrace = 0;
 			
 			if(currentToken.equalsIgnoreCase(NOT)) {
 				currentToken = inputList.get(i + 1);
@@ -81,7 +81,7 @@ public class QueryParser {
 				// Starts with "("
 				addOpenBrace += currentToken.length() - currentToken.replace("(", "").length();
 				currentToken = currentToken.replace("(", "");
-			} 
+			}
 			
 			if(currentToken.startsWith("\"")) {
 				int j = i + 1;
@@ -97,8 +97,8 @@ public class QueryParser {
 			
 			if (currentToken.endsWith(")")) {
 				// Not handled in else if since the same token can have the close braces.
+				addCloseBrace += currentToken.length() - currentToken.replace(")", "").length();
 				currentToken = currentToken.replace(")", "");
-				addCloseBrace = true;
 			}
 			
 			if(isOperator(currentToken)) {
@@ -118,10 +118,8 @@ public class QueryParser {
 							String token = tokenSplit[0] + inputList.get(next);
 							inputList.remove(next);
 							inputList.add(next, token);
-							next++;
-						} else {
-							next++;
 						}
+						next++;
 					}
 				}
 			}
@@ -135,8 +133,9 @@ public class QueryParser {
 				addOpenBrace--;
 			}
 			
-			if(addCloseBrace) {
+			if(addCloseBrace > 0) {
 				currentToken += "]";
+				addCloseBrace--;
 			}
 			
 			query.add(currentToken);
