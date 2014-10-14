@@ -71,26 +71,28 @@ public class QueryParser {
 			int addOpenBrace = 0;
 			boolean addCloseBrace = false;
 			
-			// Handle Quotes
 			if(currentToken.equalsIgnoreCase(NOT)) {
 				currentToken = inputList.get(i + 1);
 				inputList.remove(i + 1);
 				isNotQuery = true;
 			}
 			
+			if(currentToken.startsWith("(")) {
+				// Starts with "("
+				addOpenBrace += currentToken.length() - currentToken.replace("(", "").length();
+				currentToken = currentToken.replace("(", "");
+			} 
+			
 			if(currentToken.startsWith("\"")) {
 				int j = i + 1;
 				while(j < inputList.size()) {
 					currentToken += " " + inputList.get(j);
+					String nextString = inputList.get(j);
 					inputList.remove(j);
-					if(currentToken.endsWith("\"")) {
+					if(nextString.contains("\"")) {
 						break;
 					}
 				}
-			} else if(currentToken.startsWith("(")) {
-				// Starts with "("
-				addOpenBrace += currentToken.length() - currentToken.replace("(", "").length();
-				currentToken = currentToken.replace("(", "");
 			}
 			
 			if (currentToken.endsWith(")")) {
