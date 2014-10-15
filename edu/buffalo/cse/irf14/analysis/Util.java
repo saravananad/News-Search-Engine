@@ -173,14 +173,14 @@ public class Util {
 	
 	/*************************************** And, OR, Not methods ******************************/
 	
-	ArrayList<Integer> performOR(ArrayList<Integer> postings1, ArrayList<Integer> postings2){
-		ArrayList<Integer> resultPosting = new ArrayList<Integer>();
+	ArrayList<String> performOR(ArrayList<String> postings1, ArrayList<String> postings2){
+		ArrayList<String> resultPosting = new ArrayList<String>();
 		int i = 0, j = 0;
 		while(i < postings1.size() && j < postings2.size())
 		{
-			if(postings1.get(i) < postings2.get(j))
+			if(Integer.parseInt(postings1.get(i)) < Integer.parseInt(postings2.get(j)))
 				resultPosting.add(postings1.get(i++));
-			else if(postings2.get(j) < postings1.get(i))
+			else if(Integer.parseInt(postings2.get(j)) < Integer.parseInt(postings1.get(i)))
 				resultPosting.add(postings2.get(j++));
 			else
 			{
@@ -195,14 +195,14 @@ public class Util {
 		return resultPosting;
 	}
 	
-	ArrayList<Integer> performAND(ArrayList<Integer> postings1, ArrayList<Integer> postings2){
-		ArrayList<Integer> resultPosting = new ArrayList<Integer>();
+	ArrayList<String> performAND(ArrayList<String> postings1, ArrayList<String> postings2){
+		ArrayList<String> resultPosting = new ArrayList<String>();
 		int i = 0, j = 0;
 		while(i < postings1.size() && j < postings2.size())
 		{
-			if(postings1.get(i) < postings2.get(j))
+			if(Integer.parseInt(postings1.get(i)) < Integer.parseInt(postings2.get(j)))
 				i++;
-			else if(postings2.get(j) < postings1.get(i))
+			else if(Integer.parseInt(postings2.get(j)) < Integer.parseInt(postings1.get(i)))
 				j++;
 			else
 			{
@@ -213,8 +213,8 @@ public class Util {
 		return resultPosting;
 	}
 	
-	ArrayList<Integer> performNOT(ArrayList<Integer> postings1, ArrayList<Integer> postings2){
-		ArrayList<Integer> intersection = performAND(postings1, postings2);
+	ArrayList<String> performNOT(ArrayList<String> postings1, ArrayList<String> postings2){
+		ArrayList<String> intersection = performAND(postings1, postings2);
 		postings1.removeAll(intersection);
 		return postings1;
 	}
