@@ -170,4 +170,52 @@ public class Util {
 		}
 		return null;
 	}
+	
+	/*************************************** And, OR, Not methods ******************************/
+	
+	ArrayList<Integer> performOR(ArrayList<Integer> postings1, ArrayList<Integer> postings2){
+		ArrayList<Integer> resultPosting = new ArrayList<Integer>();
+		int i = 0, j = 0;
+		while(i < postings1.size() && j < postings2.size())
+		{
+			if(postings1.get(i) < postings2.get(j))
+				resultPosting.add(postings1.get(i++));
+			else if(postings2.get(j) < postings1.get(i))
+				resultPosting.add(postings2.get(j++));
+			else
+			{
+				resultPosting.add(postings2.get(j++));
+				i++;
+			}
+		}
+		while(i < postings1.size())
+			resultPosting.add(postings1.get(i++));
+		while(j < postings2.size())
+			resultPosting.add(postings2.get(j++));
+		return resultPosting;
+	}
+	
+	ArrayList<Integer> performAND(ArrayList<Integer> postings1, ArrayList<Integer> postings2){
+		ArrayList<Integer> resultPosting = new ArrayList<Integer>();
+		int i = 0, j = 0;
+		while(i < postings1.size() && j < postings2.size())
+		{
+			if(postings1.get(i) < postings2.get(j))
+				i++;
+			else if(postings2.get(j) < postings1.get(i))
+				j++;
+			else
+			{
+				resultPosting.add(postings2.get(j++));
+				i++;
+			}
+		}
+		return resultPosting;
+	}
+	
+	ArrayList<Integer> performNOT(ArrayList<Integer> postings1, ArrayList<Integer> postings2){
+		ArrayList<Integer> intersection = performAND(postings1, postings2);
+		postings1.removeAll(intersection);
+		return postings1;
+	}
 }
