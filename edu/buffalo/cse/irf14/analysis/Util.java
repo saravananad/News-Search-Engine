@@ -1,7 +1,12 @@
 package edu.buffalo.cse.irf14.analysis;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Util {
 
@@ -100,5 +105,69 @@ public class Util {
 	
 	public static String getDefaultBooleanOperator() {
 		return defaultOper;
+	}
+	
+	/************************* Searcher - getPostings	*********************************/
+	
+	private static Map<String, ArrayList<String>> termMapping = new TreeMap<String, ArrayList<String>>();
+	private static Map<String, ArrayList<String>> authorMapping= new TreeMap<String, ArrayList<String>>();
+	private static Map<String, ArrayList<String>> categoryMapping = new HashMap<String, ArrayList<String>>();
+	private static Map<String, ArrayList<String>> placeMapping = new TreeMap<String, ArrayList<String>>();
+
+	public static void initMaps(String fileName, Map<String, ArrayList<String>> mapType){
+		try {
+			BufferedReader indexReader = new BufferedReader(new FileReader(new File("IndexDirName" + File.separator + fileName)));		
+			String eachLine = indexReader.readLine();
+			while (eachLine != null){
+				String[] eachPostingPair = eachLine.split(":");
+				ArrayList<String> postingsList = new ArrayList<String>();
+				String[] postings = eachPostingPair[1].split(",");
+				for (String docID : postings){
+					postingsList.add(docID);
+				}
+				mapType.put(eachPostingPair[0], postingsList);
+				eachLine = indexReader.readLine();
+			}
+			indexReader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}	
+	}
+	
+	public ArrayList<String> getPostings(String indexType, String term){
+		switch (indexType) {
+		case  "Author":{
+			if (authorMapping.isEmpty()){
+				initMaps(Util.authorIndexFile, authorMapping);
+			}
+			ArrayList<String> postingsList = authorMapping.get(term);
+			return postingsList;
+		}
+
+		case "Term": {
+			if (termMapping.isEmpty()){
+				initMaps(Util.termIndexFile, termMapping);
+			}
+			ArrayList<String> postingsList = termMapping.get(term);
+			return postingsList;
+		}
+
+		case "Place": {
+			if (placeMapping.isEmpty()){
+				initMaps(Util.placeIndexFile, placeMapping);
+			}
+			ArrayList<String> postingsList = placeMapping.get(term);
+			return postingsList;
+		}
+
+		case "Category": {
+			if (categoryMapping.isEmpty()){
+				initMaps(Util.categoryIndexFile, categoryMapping);
+			}
+			ArrayList<String> postingsList = categoryMapping.get(term);
+			return postingsList;
+		}
+		}
+		return null;
 	}
 }
