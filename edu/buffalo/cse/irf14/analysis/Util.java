@@ -1,7 +1,12 @@
 package edu.buffalo.cse.irf14.analysis;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.text.DecimalFormat;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Util {
 
@@ -18,7 +23,13 @@ public class Util {
 	public static final String placeIndexFile = "PlaceIndex.txt";
 	public static final String docDictionaryFile = "DocDictionary.txt";
 	public static final String termOccurenceFile = "TermOccurence.txt";
-
+	
+	public static DecimalFormat newFormat = new DecimalFormat("#.#####");
+	public static String ZERO = "0";
+	
+	public static Map<String, String> documentIDMap = new HashMap<String, String>();
+	public static Map<String, Map<String, Integer>> termOccurrence = new TreeMap<String, Map<String, Integer>>();
+	
 	public enum FilterList {
 		STOPWORD(StopWordFilter.class.getName()),
 		CAPITALIZATION(CapitalizationRule.class.getName()),
@@ -154,4 +165,42 @@ public class Util {
 			operPriorityMap.put(NOT_CLOSE, NOT_PRIORITY);
 		}
 	}
+	
+	/********************************* Build Term Occurrences Map *************************************/
+	
+	public static void initDocOccurrencesMap(String indexDirName){
+		try {
+
+			/* Create a document dictionary*/
+			BufferedReader dictionaryReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + Util.docDictionaryFile)));
+			String line = dictionaryReader.readLine();
+			while ((line)!= null){
+				String[] docIDPair = line.split(":");
+				documentIDMap.put(docIDPair[1], docIDPair[0]); // New ID as Key, Old ID as value
+				line = dictionaryReader.readLine();
+			}
+			dictionaryReader.close();
+
+			/* Create a term occurrence dictionary */
+			BufferedReader occurenceReader = new BufferedReader(new FileReader(new File (indexDirName + File.separator + Util.termOccurenceFile)));
+			String occurenceLine = occurenceReader.readLine();
+			while (occurenceLine != null){
+				Map<String, Integer> innerMap = new HashMap<String, Integer>();
+				String[] eachLine = occurenceLine.split(Util.dictionaryDelimiter);
+				String tokenText = eachLine[0];
+				String[] docIdOccurenceArray = eachLine[1].split(Util.occurenceDelimiter);
+				for (String occurence : docIdOccurenceArray){
+					String[] docIdOccurence = occurence.split(Util.invidualDoc_OccurDelimiter);
+					innerMap.put(documentIDMap.get(docIdOccurence[0]), Integer.parseInt(docIdOccurence[1]));
+				}
+				termOccurrence.put(tokenText, innerMap); // Mapping of Token : Doc ID - Occurrence in each document 
+				occurenceLine = occurenceReader.readLine();	
+			}
+			occurenceReader.close();
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
 }

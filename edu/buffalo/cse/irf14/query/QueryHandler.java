@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,9 @@ public class QueryHandler {
 	private static Map<String, ArrayList<String>> authorMapping= new TreeMap<String, ArrayList<String>>();
 	private static Map<String, ArrayList<String>> categoryMapping = new HashMap<String, ArrayList<String>>();
 	private static Map<String, ArrayList<String>> placeMapping = new TreeMap<String, ArrayList<String>>();
+	public static ArrayList<String> analyzedTermList = new ArrayList<String>();
+	public static Map<String, String> docFrequenciesMap = new TreeMap<String, String>();
+
 
 	String indexDir = null;
 
@@ -36,10 +40,10 @@ public class QueryHandler {
 		this.indexDir = indexDir;
 	}
 
-	public void handleQuery(Query query) {
+	public List<Object> handleQuery(Query query) {
 		constructStack(query);
 		System.out.println( "operStack :: " + operStack.toString());
-		System.out.println("operandStack :: " + operandStack.toString());
+		return Arrays.asList(operandStack.peek());
 	}
 
 	private void constructStack(Query query) {
@@ -65,7 +69,7 @@ public class QueryHandler {
 						operandStack.pop(); // "<"
 						isFirstOperNot = true;
 					}
-					
+
 					if(Util.isValid(pop)) {
 						postings1 = (ArrayList<String>) pop;
 					}
@@ -75,7 +79,7 @@ public class QueryHandler {
 						pop = operandStack.pop(); // Element
 						operandStack.pop(); // "<"
 					}
-					
+
 					ArrayList<String> postings2 = null;
 					if(Util.isValid(pop)) {
 						postings2 = (ArrayList<String>) pop;
@@ -127,7 +131,7 @@ public class QueryHandler {
 					operandStack.pop(); // "<"
 					isFirstOperNot = true;
 				}
-				
+
 				if(Util.isValid(pop)) {
 					postings1 = (ArrayList<String>) pop;
 				}
@@ -137,7 +141,7 @@ public class QueryHandler {
 					pop = operandStack.pop(); // Element
 					operandStack.pop(); // "<"
 				}
-				
+
 				ArrayList<String> postings2 = null;
 				if(Util.isValid(pop)) {
 					postings2 = (ArrayList<String>) pop;
@@ -185,6 +189,14 @@ public class QueryHandler {
 				term += stream.next();
 			}
 			ArrayList<String> postings = getPostings(this.indexDir , stringSplit[0], term);
+			if (term.isEmpty()){
+				analyzedTermList.add(null);
+				docFrequenciesMap.put("null", Util.ZERO);
+			}
+			else {
+				analyzedTermList.add(term);
+				docFrequenciesMap.put(term, String.valueOf(postings.size()));
+			}
 			operandStack.push(postings);
 		} catch (TokenizerException e) {
 			System.err.println(e);
@@ -204,9 +216,12 @@ public class QueryHandler {
 	}
 
 	/************************* Searcher - getPostings	*********************************/
-
+	
 	private static void initMaps(String indexDirName, String fileName, Map<String, ArrayList<String>> mapType){
 		try {
+			if (Util.documentIDMap.isEmpty() || Util.termOccurrence.isEmpty()){
+				Util.initDocOccurrencesMap(indexDirName);
+			}
 			BufferedReader indexReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + fileName)));		
 			String eachLine = indexReader.readLine();
 			while (eachLine != null){
@@ -214,7 +229,7 @@ public class QueryHandler {
 				ArrayList<String> postingsList = new ArrayList<String>();
 				String[] postings = eachPostingPair[1].split(",");
 				for (String docID : postings){
-					postingsList.add(docID);
+					postingsList.add(Util.documentIDMap.get(docID));
 				}
 				mapType.put(eachPostingPair[0], postingsList);
 				eachLine = indexReader.readLine();
