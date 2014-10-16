@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 import edu.buffalo.cse.irf14.analysis.Util;
-import edu.buffalo.cse.irf14.query.OkapiModel;
 import edu.buffalo.cse.irf14.query.Query;
 import edu.buffalo.cse.irf14.query.QueryHandler;
 import edu.buffalo.cse.irf14.query.QueryParser;

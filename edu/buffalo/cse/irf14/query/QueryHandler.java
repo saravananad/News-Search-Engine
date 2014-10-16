@@ -26,13 +26,8 @@ public class QueryHandler {
 	private Stack<Object> operandStack = new Stack<Object>();
 	Tokenizer tokenizer = new Tokenizer();
 
-	private static Map<String, ArrayList<String>> termMapping = new TreeMap<String, ArrayList<String>>();
-	private static Map<String, ArrayList<String>> authorMapping= new TreeMap<String, ArrayList<String>>();
-	private static Map<String, ArrayList<String>> categoryMapping = new HashMap<String, ArrayList<String>>();
-	private static Map<String, ArrayList<String>> placeMapping = new TreeMap<String, ArrayList<String>>();
 	public static ArrayList<String> analyzedTermList = new ArrayList<String>();
 	public static Map<String, String> docFrequenciesMap = new TreeMap<String, String>();
-
 
 	String indexDir = null;
 
@@ -217,74 +212,14 @@ public class QueryHandler {
 
 	/************************* Searcher - getPostings	*********************************/
 	
-	private static void initMaps(String indexDirName, String fileName, Map<String, ArrayList<String>> mapType){
-		try {
-			if (Util.documentIDMap.isEmpty() || Util.termOccurrence.isEmpty()){
-				Util.initDocOccurrencesMap(indexDirName);
-			}
-			BufferedReader indexReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + fileName)));		
-			String eachLine = indexReader.readLine();
-			while (eachLine != null){
-				String[] eachPostingPair = eachLine.split(":");
-				ArrayList<String> postingsList = new ArrayList<String>();
-				String[] postings = eachPostingPair[1].split(",");
-				for (String docID : postings){
-					postingsList.add(Util.documentIDMap.get(docID));
-				}
-				mapType.put(eachPostingPair[0], postingsList);
-				eachLine = indexReader.readLine();
-			}
-			indexReader.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}	
-	}
-
 	private static ArrayList<String> getPostings(String indexDirName, String indexTypeString, String term) {
 		IndexType indexType = IndexType.valueOf(indexTypeString.toUpperCase());
-		return getPostings(indexDirName,indexType, term);
-	}
-
-	private static ArrayList<String> getPostings(String indexDirName, IndexType indexType, String term){
-		switch (indexType) {
-		case  AUTHOR:{
-			if (authorMapping.isEmpty()){
-				initMaps(indexDirName,Util.authorIndexFile, authorMapping);
-			}
-			ArrayList<String> postingsList = authorMapping.get(term);
-			return postingsList;
-		}
-
-		case TERM: {
-			if (termMapping.isEmpty()){
-				initMaps(indexDirName,Util.termIndexFile, termMapping);
-			}
-			ArrayList<String> postingsList = termMapping.get(term);
-			return postingsList;
-		}
-
-		case PLACE: {
-			if (placeMapping.isEmpty()){
-				initMaps(indexDirName,Util.placeIndexFile, placeMapping);
-			}
-			ArrayList<String> postingsList = placeMapping.get(term);
-			return postingsList;
-		}
-
-		case CATEGORY: {
-			if (categoryMapping.isEmpty()){
-				initMaps(indexDirName,Util.categoryIndexFile, categoryMapping);
-			}
-			ArrayList<String> postingsList = categoryMapping.get(term);
-			return postingsList;
-		}
-		}
-		return null;
+		return Util.getPostings(indexDirName,indexType, term);
 	}
 
 	/*************************************** And, OR, Not methods ******************************/
 
-	private static ArrayList<String> performOR(ArrayList<String> postings1, ArrayList<String> postings2){
+	public static ArrayList<String> performOR(ArrayList<String> postings1, ArrayList<String> postings2){
 		if(postings1 != null && postings2 != null) {
 			ArrayList<String> resultPosting = new ArrayList<String>();
 			int i = 0, j = 0;

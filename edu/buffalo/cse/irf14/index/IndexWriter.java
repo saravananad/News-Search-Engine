@@ -40,6 +40,7 @@ public class IndexWriter {
 	private static Map<String, List<Long>> authorIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, List<Long>> categoryIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, List<Long>> placeIndex = new TreeMap<String, List<Long>>();
+	private static Map<Long, Long> docIDSizeMap = new HashMap<Long, Long>();
 	private static Map<String, Map<Long,Long>> termOccurrence = new TreeMap<String, Map<Long,Long>>();
 
 	private Tokenizer tokenizer = new Tokenizer();
@@ -186,9 +187,11 @@ public class IndexWriter {
 
 	private static void handleTermIndex(long currentDocID, TokenStream tokenStream) {
 		if(tokenStream != null && currentDocID != -1) {
+			long totalTerms = 0;
 			while(tokenStream.hasNext()) {
 				Token token = tokenStream.next();
 				if(Util.isValidString(token.toString())) {
+					totalTerms++;
 					if(termIndex.containsKey(token.toString())) {
 						List<Long> docList = termIndex.get(token.toString());
 						if(!docList.contains(currentDocID)) {
@@ -213,6 +216,10 @@ public class IndexWriter {
 						termOccurrence.put(token.toString(), termOccurrenceMap);
 					}
 				}
+			}
+			
+			if(docIDSizeMap.get(currentDocID) == null) {
+				docIDSizeMap.put(currentDocID, totalTerms);
 			}
 		}
 	}
@@ -363,6 +370,18 @@ public class IndexWriter {
 					String postings = next.getValue().toString();
 					postings = postings.replace(", ", ",");
 					writer.write((String) postings + "\n");
+				}
+				writer.close();
+			}
+			
+			if(docIDSizeMap != null) {
+				File docIDSizeFile = new File(indexWriteDir + File.separator + Util.docSizeFIle);
+				docIDSizeFile.getParentFile().mkdir();
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(docIDSizeFile)));
+				Iterator<Entry<Long, Long>> iterator = docIDSizeMap.entrySet().iterator();
+				while(iterator.hasNext()) {
+					Entry<Long, Long> next = iterator.next();
+					writer.write(next.getKey() + Util.dictionaryDelimiter + next.getValue() + "\n");
 				}
 				writer.close();
 			}

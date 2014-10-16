@@ -4,9 +4,13 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
+
+import edu.buffalo.cse.irf14.index.IndexType;
+import edu.buffalo.cse.irf14.query.QueryHandler;
 
 public class Util {
 
@@ -22,6 +26,7 @@ public class Util {
 	public static final String categoryIndexFile = "CategoryIndex.txt";
 	public static final String placeIndexFile = "PlaceIndex.txt";
 	public static final String docDictionaryFile = "DocDictionary.txt";
+	public static final String docSizeFIle = "docSize.txt";
 	public static final String termOccurenceFile = "TermOccurence.txt";
 	
 	public static DecimalFormat newFormat = new DecimalFormat("#.#####");
@@ -132,8 +137,12 @@ public class Util {
 	public static final String CLOSE_BRACES = "}";
 
 	private static Map<String, Integer> operPriorityMap = new HashMap<String, Integer>();
+	private static Map<Long, Long> docSizeMap = new HashMap<Long, Long>();
 
-
+	private static Map<String, ArrayList<String>> termMapping = new TreeMap<String, ArrayList<String>>();
+	private static Map<String, ArrayList<String>> authorMapping= new TreeMap<String, ArrayList<String>>();
+	private static Map<String, ArrayList<String>> categoryMapping = new HashMap<String, ArrayList<String>>();
+	private static Map<String, ArrayList<String>> placeMapping = new TreeMap<String, ArrayList<String>>();
 	public static String getDefaultBooleanOperator() {
 		return defaultOper;
 	}
@@ -201,6 +210,97 @@ public class Util {
 		catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private static void initMaps(String indexDirName, String fileName, Map<String, ArrayList<String>> mapType){
+		try {
+			if (documentIDMap.isEmpty() || termOccurrence.isEmpty()){
+				Util.initDocOccurrencesMap(indexDirName);
+			}
+			if(docSizeMap.isEmpty()) {
+				initDocumentSizeMap(indexDirName);
+			}
+			
+			BufferedReader indexReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + fileName)));		
+			String eachLine = indexReader.readLine();
+			while (eachLine != null){
+				String[] eachPostingPair = eachLine.split(":");
+				ArrayList<String> postingsList = new ArrayList<String>();
+				String[] postings = eachPostingPair[1].split(",");
+				for (String docID : postings){
+					postingsList.add(Util.documentIDMap.get(docID));
+				}
+				mapType.put(eachPostingPair[0], postingsList);
+				eachLine = indexReader.readLine();
+			}
+			indexReader.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void initDocumentSizeMap(String indexDirName) {
+		try {
+			BufferedReader dictionaryReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + Util.docSizeFIle)));
+			String line = null;
+			while ((line = dictionaryReader.readLine())!= null){
+				String[] docIDPair = line.split(dictionaryDelimiter);
+				docSizeMap.put(Long.valueOf(docIDPair[1]), Long.valueOf(docIDPair[0])); // New ID as Key, Old ID as value
+			}
+			dictionaryReader.close();
+		} catch(Exception ex) {
+			System.err.println(ex);
+		}
+	}
+	
+	public static ArrayList<String> getPostings(String indexDirName, IndexType indexType, String term){
+		switch (indexType) {
+		case  AUTHOR:{
+			if (authorMapping.isEmpty()){
+				initMaps(indexDirName,Util.authorIndexFile, authorMapping);
+			}
+			ArrayList<String> postingsList = authorMapping.get(term);
+			return postingsList;
+		}
+
+		case TERM: {
+			if (termMapping.isEmpty()){
+				initMaps(indexDirName,Util.termIndexFile, termMapping);
+			}
+			ArrayList<String> queryList = termMapping.get(term);
+			
+			String firstCapitalized = term.substring(0,1).toUpperCase() + term.substring(1);
+			ArrayList<String> firstCaptitalList = termMapping.get(firstCapitalized);
+			if(Util.isValid(firstCaptitalList)) {
+				queryList = QueryHandler.performOR(queryList, firstCaptitalList);
+			}
+			
+			String fullCap = term.toUpperCase();
+			ArrayList<String> fullCapList = termMapping.get(fullCap);
+			if(Util.isValid(fullCapList)) {
+				queryList = QueryHandler.performOR(queryList, fullCapList);
+			}
+			
+			return queryList;
+		}
+
+		case PLACE: {
+			if (placeMapping.isEmpty()){
+				initMaps(indexDirName,Util.placeIndexFile, placeMapping);
+			}
+			ArrayList<String> postingsList = placeMapping.get(term);
+			return postingsList;
+		}
+
+		case CATEGORY: {
+			if (categoryMapping.isEmpty()){
+				initMaps(indexDirName,Util.categoryIndexFile, categoryMapping);
+			}
+			ArrayList<String> postingsList = categoryMapping.get(term);
+			return postingsList;
+		}
+		}
+		return null;
 	}
 
 }

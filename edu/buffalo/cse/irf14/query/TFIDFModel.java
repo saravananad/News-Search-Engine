@@ -127,5 +127,4 @@ public class TFIDFModel {
 		Map<String, String> cosineScores = calculateCosine(tfIdfDocMatrix, tfQueryMap);
 		return cosineScores;
 	}
-
 }
