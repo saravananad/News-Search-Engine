@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import edu.buffalo.cse.irf14.analysis.Util;
+
 /**
  * @author nikhillo
  * Static parser that converts raw text to Query objects
@@ -15,16 +17,13 @@ public class QueryParser {
 
 	private static List<String> operators = new ArrayList<String>();
 
-	private static final String AND = "AND";
-	private static final String OR = "OR";
-	private static final String NOT = "NOT";
-	
 	private static final String TERM = "Term:";
 	private static final String AUTHOR = "Author:";
 	private static final String CATEGORY = "Category:";
 	private static final String PLACE = "Place:";
 
-	private static final String[] operatorsArray = { AND, OR, NOT};
+	public static final String NOT = "NOT";
+	private static final String[] operatorsArray = { Util.AND, Util.OR, NOT};
 	private static final String[] indexTypes = {TERM, AUTHOR, CATEGORY, PLACE};
 	
 	public static boolean isFacetedTerm(String token){
@@ -72,7 +71,7 @@ public class QueryParser {
 		String[] input = userQuery.split(" ");
 		ArrayList<String> inputList = new ArrayList<String>(Arrays.asList(input));
 		
-		query.add("{");
+		query.add(Util.OPEN_BRACES);
 		
 		for(int i = 0; i < inputList.size(); i++) {
 			String currentToken = inputList.get(i);
@@ -138,12 +137,12 @@ public class QueryParser {
 			}
 			
 			while(addOpenBrace > 0) {
-				currentToken = "[" + currentToken;
+				currentToken = Util.OPEN_SQUARE_BRACKETS + currentToken;
 				addOpenBrace--;
 			}
 			
 			while(addCloseBrace > 0) {
-				currentToken += "]";
+				currentToken += Util.CLOSE_SQUARE_BRACKETS;
 				addCloseBrace--;
 			}
 			
@@ -152,11 +151,11 @@ public class QueryParser {
 				if(!isOperator(inputList.get(i + 1))) {
 					query.add(defaultOperator);
 				} else if(NOT.equalsIgnoreCase(inputList.get(i + 1))) {
-					query.add(AND);
+					query.add(Util.AND);
 				}
 			}
 		}
-		query.add("}");
+		query.add(Util.CLOSE_BRACES);
 		
 		List<String> searchQuery = query.getSearchQuery();
 		int firstIndex = -1;
@@ -173,9 +172,9 @@ public class QueryParser {
 			if(isFacetedTerm(searchQuery.get(i))) {
 				if(isOperator(searchQuery.get(i + 1))) {
 					
-					if(searchQuery.get(i).startsWith("[")) {
+					if(searchQuery.get(i).startsWith(Util.OPEN_SQUARE_BRACKETS)) {
 						while(i < searchQuery.size()) {
-							if(searchQuery.get(i).contains("]")) {
+							if(searchQuery.get(i).contains(Util.CLOSE_SQUARE_BRACKETS)) {
 								break;
 							}
 							i += 2;
@@ -191,11 +190,11 @@ public class QueryParser {
 						String oper = searchQuery.get(i + 1);
 						if(!currentFacet.equalsIgnoreCase(facet) || !firstOper.equalsIgnoreCase(oper)) {
 							if(firstIndex + 2 < i) {
-								String newTerm = "[" + searchQuery.get(firstIndex);
+								String newTerm = Util.OPEN_SQUARE_BRACKETS + searchQuery.get(firstIndex);
 								searchQuery.remove(firstIndex);
 								searchQuery.add(firstIndex, newTerm);
 								
-								newTerm = searchQuery.get(i - 2) + "]";
+								newTerm = searchQuery.get(i - 2) + Util.CLOSE_SQUARE_BRACKETS;
 								searchQuery.remove(i - 2);
 								searchQuery.add(i - 2, newTerm);
 							}
@@ -210,19 +209,19 @@ public class QueryParser {
 					String currFacet = getFacetOfTerm(searchQuery.get(i));
 					if(facet != null && firstIndex != -1 &&  firstIndex != startingIndex) {
 						if(facet.equalsIgnoreCase(currFacet) && firstIndex + 2 <= i) {
-							String newTerm = "[" + searchQuery.get(firstIndex);
+							String newTerm = Util.OPEN_SQUARE_BRACKETS + searchQuery.get(firstIndex);
 							searchQuery.remove(firstIndex);
 							searchQuery.add(firstIndex, newTerm);
 							
-							newTerm = searchQuery.get(i) + "]";
+							newTerm = searchQuery.get(i) + Util.CLOSE_SQUARE_BRACKETS;
 							searchQuery.remove(i);
 							searchQuery.add(i, newTerm);
 						} else if(firstIndex + 2 < i) {
-							String newTerm = "[" + searchQuery.get(firstIndex);
+							String newTerm = Util.OPEN_SQUARE_BRACKETS + searchQuery.get(firstIndex);
 							searchQuery.remove(firstIndex);
 							searchQuery.add(firstIndex, newTerm);
 							
-							newTerm = searchQuery.get(i - 2) + "]";
+							newTerm = searchQuery.get(i - 2) + Util.CLOSE_SQUARE_BRACKETS;
 							searchQuery.remove(i - 2);
 							searchQuery.add(i - 2, newTerm);
 						}						

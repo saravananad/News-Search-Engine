@@ -7,6 +7,7 @@ import java.util.Map;
 
 import edu.buffalo.cse.irf14.analysis.Util;
 import edu.buffalo.cse.irf14.query.Query;
+import edu.buffalo.cse.irf14.query.QueryHandler;
 import edu.buffalo.cse.irf14.query.QueryParser;
 
 /**
@@ -44,7 +45,8 @@ public class SearchRunner {
 	 */
 	public void query(String userQuery, ScoringModel model) {
 		Query query = QueryParser.parse(userQuery, Util.getDefaultBooleanOperator());
-		System.out.println(query);
+		QueryHandler handler = new QueryHandler(indexDirectory, query);
+		handler.handleQuery(query);
 	}
 	
 	/**
