@@ -2,12 +2,11 @@ package edu.buffalo.cse.irf14;
 
 import java.io.File;
 import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
 import edu.buffalo.cse.irf14.analysis.Util;
+import edu.buffalo.cse.irf14.query.OkapiModel;
 import edu.buffalo.cse.irf14.query.Query;
 import edu.buffalo.cse.irf14.query.QueryHandler;
 import edu.buffalo.cse.irf14.query.QueryParser;
@@ -52,10 +51,14 @@ public class SearchRunner {
 		switch (model){
 		case TFIDF :{
 		TFIDFModel tfidfObj = new TFIDFModel(indexDirectory, handler.analyzedTermList, handler.docFrequenciesMap, handler.handleQuery(query));
-		tfidfObj.performTFIDFRanking();
-		};
-		case OKAPI: {};
-
+		Map<String, String> searchResults = tfidfObj.performTFIDFRanking();
+		}
+		break;
+		case OKAPI: {
+		OkapiModel okapiObj = new OkapiModel(indexDirectory, handler.analyzedTermList, handler.docFrequenciesMap, handler.handleQuery(query));
+		Map<String, String> searchResults = okapiObj.performOkapiRanking();
+		}
+		break;
 		}
 	}
 

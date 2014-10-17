@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -32,6 +33,8 @@ public class Util {
 	public static DecimalFormat newFormat = new DecimalFormat("#.#####");
 	public static String ZERO = "0";
 	public static String ONE = "1";
+	public static Integer totalDocuments = 0;
+	public static Double averageDocLength = 0.0;
 	
 	public static Map<String, String> documentIDMap = new HashMap<String, String>();
 	public static Map<String, Map<String, Integer>> termOccurrence = new TreeMap<String, Map<String, Integer>>();
@@ -138,7 +141,7 @@ public class Util {
 	public static final String CLOSE_BRACES = "}";
 
 	private static Map<String, Integer> operPriorityMap = new HashMap<String, Integer>();
-	public static Map<String, Long> docSizeMap = new HashMap<String, Long>();
+	public static Map<String, Integer> docSizeMap = new HashMap<String, Integer>();
 
 	private static Map<String, ArrayList<String>> termMapping = new TreeMap<String, ArrayList<String>>();
 	private static Map<String, ArrayList<String>> authorMapping= new TreeMap<String, ArrayList<String>>();
@@ -213,6 +216,25 @@ public class Util {
 		}
 	}
 	
+	private static void calcAvgDocLength(){
+		Integer sumOfAllLengths = 0;
+		for (Integer length : docSizeMap.values()){
+			sumOfAllLengths += length;
+		}
+		averageDocLength = (double) (sumOfAllLengths / totalDocuments);
+	}
+	
+	public static Map<String, String> getTopDocs(Map<String, String> reverseMap, Map<String, String> relevanceMap, int size){
+		Map<String, String> topDocsMap = new LinkedHashMap<String, String>();
+		for (Map.Entry<String, String> entry : reverseMap.entrySet()) {
+			String docID = entry.getValue();
+			topDocsMap.put(docID, relevanceMap.get(docID));
+			if (topDocsMap.size() == size)
+				break;
+		}
+		return topDocsMap;
+	}
+	
 	private static void initMaps(String indexDirName, String fileName, Map<String, ArrayList<String>> mapType){
 		
 		try {
@@ -222,6 +244,8 @@ public class Util {
 			if(docSizeMap.isEmpty()) {
 				initDocumentSizeMap(indexDirName);
 			}
+			totalDocuments = docSizeMap.size();
+			calcAvgDocLength();
 			BufferedReader indexReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + fileName)));		
 			String eachLine = indexReader.readLine();
 			while (eachLine != null){
@@ -246,7 +270,7 @@ public class Util {
 			String line = null;
 			while ((line = dictionaryReader.readLine())!= null){
 				String[] docIDPair = line.split(dictionaryDelimiter);
-				docSizeMap.put(documentIDMap.get(docIDPair[0]), Long.valueOf(docIDPair[1])); 
+				docSizeMap.put(documentIDMap.get(docIDPair[0]), Integer.valueOf(docIDPair[1])); 
 			}
 			dictionaryReader.close();
 		} catch(Exception ex) {
