@@ -9,21 +9,24 @@ import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import edu.buffalo.cse.irf14.analysis.Util;
+import edu.buffalo.cse.irf14.index.IndexType;
 
 public class TFIDFModel {
 
+	String indexDir;
 	ArrayList<String> userQuery;
 	ArrayList<String> postings;
 	Map<String, String> docFreqMap;
-	int totalNumberOfDocuments = 130; // TO-DO
+	int totalNumberOfDocuments = 9980; // TO-DO
 
-	public TFIDFModel(ArrayList<String> query, Map<String, String> docMap, ArrayList<String> postingsList) {
+	public TFIDFModel(String indexDirectory, ArrayList<String> query, Map<String, String> docMap, ArrayList<String> postingsList) {
+		this.indexDir = indexDirectory;
 		this.userQuery = query;
 		this.postings = postingsList;
 		this.docFreqMap = docMap;
 	}
 
-	public Map<String, Map<String, String>> constructTermFreqMap(String[] userQuery, String[] postingsArray){
+	public Map<String, Map<String, String>> constructTermFreqMap(String[] userQuery, ArrayList<String> postingsArray){
 		Map<String, Map<String, String>> termOccurrence = new TreeMap<String, Map<String, String>>();
 		for (String docID : postingsArray){
 			Map<String, String> idFreqMap = new TreeMap<String, String>();
@@ -31,11 +34,69 @@ public class TFIDFModel {
 				if (queryTerm.equals("null"))
 					idFreqMap.put(queryTerm, Util.ZERO);
 				else {
-					Map<String, Integer> termFreqMap = Util.termOccurrence.get(queryTerm);
-					if (termFreqMap.isEmpty())
-						idFreqMap.put(queryTerm, Util.ZERO);
-					else 
-						idFreqMap.put(queryTerm, termFreqMap.get(docID).toString());
+					String splitString[] = queryTerm.split(":");
+					IndexType indexType = IndexType.valueOf(splitString[0].toUpperCase());
+					switch (indexType){
+					case TERM: {
+						String normalizedQueryTerm = splitString[1];
+						String capitalizedQueryTerm = normalizedQueryTerm.toUpperCase();
+						String firstCapitalizedTerm = normalizedQueryTerm.substring(0,1).toUpperCase() + normalizedQueryTerm.substring(1);
+						Map<String, Integer> termFreqMap = Util.termOccurrence.get(normalizedQueryTerm);
+						Map<String, Integer> capTermFreqMap = Util.termOccurrence.get(capitalizedQueryTerm);
+						Map<String, Integer> firstLetterUpperMap = Util.termOccurrence.get(firstCapitalizedTerm);
+						String occAsAnalyzedTerm = Util.ZERO;
+						String occAsFullCapsTerm = Util.ZERO;
+						String occAsfirstCharCapTerm = Util.ZERO;
+						
+						// Record Occurrences Neatly
+						if (Util.isValid(termFreqMap)){
+							if (Util.isValid(termFreqMap.get(docID)))
+								occAsAnalyzedTerm = termFreqMap.get(docID).toString();
+						}
+						if (Util.isValid(capTermFreqMap)){
+							if (Util.isValid(capTermFreqMap.get(docID)))
+								occAsFullCapsTerm = capTermFreqMap.get(docID).toString();
+						}
+						if (Util.isValid(firstLetterUpperMap)){
+							if (Util.isValid(firstLetterUpperMap.get(docID)))
+								occAsfirstCharCapTerm = firstLetterUpperMap.get(docID).toString();
+						}
+						Integer totalOccurrences = Integer.parseInt(occAsAnalyzedTerm) + Integer.parseInt(occAsFullCapsTerm) + Integer.parseInt(occAsfirstCharCapTerm);
+						if (termFreqMap == null && capTermFreqMap == null && firstLetterUpperMap == null){
+							idFreqMap.put(normalizedQueryTerm, Util.ZERO);
+						}
+						else 
+							idFreqMap.put(normalizedQueryTerm, String.valueOf(totalOccurrences));
+					}
+					break;
+					case AUTHOR: {
+						String authorName = splitString[1];
+						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, authorName.trim());
+						if (postingsList.contains(docID))
+							idFreqMap.put(authorName, Util.ONE);
+						else
+							idFreqMap.put(authorName, Util.ZERO);					
+					}
+					break;
+					case CATEGORY: {
+						String categoryName = splitString[1];
+						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, categoryName);
+						if (postingsList.contains(docID))
+							idFreqMap.put(categoryName, Util.ONE);
+						else
+							idFreqMap.put(categoryName, Util.ZERO);
+					}
+					break;
+					case PLACE: {
+						String placeName = splitString[1].toLowerCase();
+						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, placeName);
+						if (postingsList.contains(docID))
+							idFreqMap.put(splitString[1], Util.ONE);
+						else
+							idFreqMap.put(splitString[1], Util.ZERO);
+					}
+					break;
+					}
 				}
 			}
 			termOccurrence.put(docID, idFreqMap);
@@ -97,6 +158,8 @@ public class TFIDFModel {
 				vectorTwoLen += Math.pow(Double.parseDouble(querytfidf.get(innerEntry.getKey())), 2);
 			}
 			Double score = (vectorsProduct)/((Math.sqrt(vectorOneLen)*(Math.sqrt(vectorTwoLen))));
+			Long docLength = Util.docSizeMap.get(entry.getKey());
+			score = score/(docLength*2);
 			scoreMap.put(entry.getKey(), String.valueOf(Util.newFormat.format(score)));
 		}
 		return scoreMap;
@@ -104,27 +167,29 @@ public class TFIDFModel {
 
 	public Map<String, String> performTFIDFRanking(){
 		String[] queryArray = userQuery.toArray(new String[userQuery.size()]);
-		String[] postingsArray = postings.toArray(new String[postings.size()]);
-		
+
 		// Construct the TF-IDF Mesh
-		Map<String, Map<String, String>> termOccurrence = constructTermFreqMap(queryArray, postingsArray);
+		Map<String, Map<String, String>> termOccurrence = constructTermFreqMap(queryArray, postings);
 		Map<String, Map<String, String>> logTF = calculateTF(termOccurrence);
 		Map<String, String> logIDF = calculateIDF(docFreqMap);
 		Map<String, Map<String, String>> tfIdfDocMatrix = calculateTFIDF(logTF, logIDF);
-		
+
 		// Perform the operations that should be done considering query as one document
 		Map<String, Map<String, String>> queryMap = new TreeMap<String, Map<String,String>>();
 		Set<String> querySet = new HashSet<String>(userQuery);
 		Map<String, String> tfQueryMap = new TreeMap<String, String>();
 		for (String queryTerm : querySet) {
-			tfQueryMap.put(queryTerm, String.valueOf(Collections.frequency(querySet, queryTerm)));
+			String splitString[] = queryTerm.split(":");
+			tfQueryMap.put(splitString[1], String.valueOf(Collections.frequency(querySet, queryTerm)));
 		}
 		queryMap.put("Query", tfQueryMap);
-		Map<String, Map<String, String>> tfIdfQueryMatrix = calculateTFIDF(queryMap, logIDF);
+		Map<String, Map<String, String>> queryTFMap = calculateTF(queryMap);
+		Map<String, Map<String, String>> tfIdfQueryMatrix = calculateTFIDF(queryTFMap, logIDF);
 		tfQueryMap = tfIdfQueryMatrix.get("Query");
-		
+
 		// Calculate the Cosine Similarity between the query and every document in the postings list
 		Map<String, String> cosineScores = calculateCosine(tfIdfDocMatrix, tfQueryMap);
+		System.out.println(cosineScores);
 		return cosineScores;
 	}
 }

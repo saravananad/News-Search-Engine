@@ -1,11 +1,7 @@
 package edu.buffalo.cse.irf14.query;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
@@ -35,10 +31,14 @@ public class QueryHandler {
 		this.indexDir = indexDir;
 	}
 
-	public List<Object> handleQuery(Query query) {
+	public ArrayList<String> handleQuery(Query query) {
 		constructStack(query);
-		System.out.println( "operStack :: " + operStack.toString());
-		return Arrays.asList(operandStack.peek());
+		Object postingsObj = operandStack.peek();
+		ArrayList<String> postingsList = null;
+		if (Util.isValid(postingsObj)){
+			postingsList = (ArrayList<String>) postingsObj;
+		}
+		return postingsList;
 	}
 
 	private void constructStack(Query query) {
@@ -180,17 +180,27 @@ public class QueryHandler {
 			while(analyzer.increment()) {}
 			TokenStream stream = analyzer.getStream();
 			term = "";
-			while(stream.hasNext()) {
-				term += stream.next();
+			
+			// Retain the Author format to retrieve from Index
+			if (indexType.equals(IndexType.AUTHOR.name())){
+				while(stream.hasNext()) {
+					term += stream.next() + " ";
+				}
+				term = term.replaceAll("\"", "");
 			}
-			ArrayList<String> postings = getPostings(this.indexDir , stringSplit[0], term);
+			else {
+				while(stream.hasNext()) {
+					term += stream.next();
+				}
+			}		
+			ArrayList<String> postings = getPostings(this.indexDir , stringSplit[0], term.trim());
 			if (term.isEmpty()){
 				analyzedTermList.add(null);
 				docFrequenciesMap.put("null", Util.ZERO);
 			}
 			else {
-				analyzedTermList.add(term);
-				docFrequenciesMap.put(term, String.valueOf(postings.size()));
+				analyzedTermList.add(stringSplit[0] + ":" +term);
+				docFrequenciesMap.put(term, String.valueOf(postings.size())); //TO-DO NULL CHECKING!
 			}
 			operandStack.push(postings);
 		} catch (TokenizerException e) {
@@ -221,6 +231,7 @@ public class QueryHandler {
 
 	public static ArrayList<String> performOR(ArrayList<String> postings1, ArrayList<String> postings2){
 		if(postings1 != null && postings2 != null) {
+			Collections.sort(postings1); Collections.sort(postings2);
 			ArrayList<String> resultPosting = new ArrayList<String>();
 			int i = 0, j = 0;
 			while(i < postings1.size() && j < postings2.size())
@@ -251,6 +262,7 @@ public class QueryHandler {
 
 	private static ArrayList<String> performAND(ArrayList<String> postings1, ArrayList<String> postings2){
 		if(postings1 != null && postings2 != null) {
+			Collections.sort(postings1); Collections.sort(postings2);
 			ArrayList<String> resultPosting = new ArrayList<String>();
 			int i = 0, j = 0;
 			while(i < postings1.size() && j < postings2.size())
@@ -271,6 +283,7 @@ public class QueryHandler {
 	}
 
 	private static ArrayList<String> performNOT(ArrayList<String> postings1, ArrayList<String> postings2, boolean isFirstPostingNot){
+		Collections.sort(postings1); Collections.sort(postings2);
 		if(isFirstPostingNot) {
 			if(!Util.isValid(postings1)) {
 				return postings2;

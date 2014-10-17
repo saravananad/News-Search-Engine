@@ -48,16 +48,10 @@ public class SearchRunner {
 	 */
 	public void query(String userQuery, ScoringModel model) {
 		Query query = QueryParser.parse(userQuery, Util.getDefaultBooleanOperator());
-		System.out.println(query.toString());
 		QueryHandler handler = new QueryHandler(indexDirectory, query);
-		
-		// TO-DO
-		ArrayList postings = new ArrayList(Arrays.asList(handler.handleQuery(query)));
-		ArrayList<String> postings2 = new ArrayList<String>(postings);
-		
 		switch (model){
 		case TFIDF :{
-		TFIDFModel tfidfObj = new TFIDFModel(handler.analyzedTermList, handler.docFrequenciesMap, postings);
+		TFIDFModel tfidfObj = new TFIDFModel(indexDirectory, handler.analyzedTermList, handler.docFrequenciesMap, handler.handleQuery(query));
 		tfidfObj.performTFIDFRanking();
 		};
 		case OKAPI: {};

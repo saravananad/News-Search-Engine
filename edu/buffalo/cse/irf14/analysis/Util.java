@@ -20,7 +20,7 @@ public class Util {
 	public static final String dictionaryDelimiter = ":";
 	public static final String occurenceDelimiter = ";";
 	public static final String invidualDoc_OccurDelimiter = "=";
-
+	
 	public static final String authorIndexFile = "AuthorIndex.txt";
 	public static final String termIndexFile = "TermIndex.txt";
 	public static final String categoryIndexFile = "CategoryIndex.txt";
@@ -31,6 +31,7 @@ public class Util {
 	
 	public static DecimalFormat newFormat = new DecimalFormat("#.#####");
 	public static String ZERO = "0";
+	public static String ONE = "1";
 	
 	public static Map<String, String> documentIDMap = new HashMap<String, String>();
 	public static Map<String, Map<String, Integer>> termOccurrence = new TreeMap<String, Map<String, Integer>>();
@@ -137,7 +138,7 @@ public class Util {
 	public static final String CLOSE_BRACES = "}";
 
 	private static Map<String, Integer> operPriorityMap = new HashMap<String, Integer>();
-	private static Map<Long, Long> docSizeMap = new HashMap<Long, Long>();
+	public static Map<String, Long> docSizeMap = new HashMap<String, Long>();
 
 	private static Map<String, ArrayList<String>> termMapping = new TreeMap<String, ArrayList<String>>();
 	private static Map<String, ArrayList<String>> authorMapping= new TreeMap<String, ArrayList<String>>();
@@ -213,6 +214,7 @@ public class Util {
 	}
 	
 	private static void initMaps(String indexDirName, String fileName, Map<String, ArrayList<String>> mapType){
+		
 		try {
 			if (documentIDMap.isEmpty() || termOccurrence.isEmpty()){
 				Util.initDocOccurrencesMap(indexDirName);
@@ -220,7 +222,6 @@ public class Util {
 			if(docSizeMap.isEmpty()) {
 				initDocumentSizeMap(indexDirName);
 			}
-			
 			BufferedReader indexReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + fileName)));		
 			String eachLine = indexReader.readLine();
 			while (eachLine != null){
@@ -245,7 +246,7 @@ public class Util {
 			String line = null;
 			while ((line = dictionaryReader.readLine())!= null){
 				String[] docIDPair = line.split(dictionaryDelimiter);
-				docSizeMap.put(Long.valueOf(docIDPair[1]), Long.valueOf(docIDPair[0])); // New ID as Key, Old ID as value
+				docSizeMap.put(documentIDMap.get(docIDPair[0]), Long.valueOf(docIDPair[1])); 
 			}
 			dictionaryReader.close();
 		} catch(Exception ex) {
@@ -288,8 +289,26 @@ public class Util {
 			if (placeMapping.isEmpty()){
 				initMaps(indexDirName,Util.placeIndexFile, placeMapping);
 			}
-			ArrayList<String> postingsList = placeMapping.get(term);
-			return postingsList;
+			ArrayList<String> queryList = placeMapping.get(term);
+			
+			String firstCapitalized = term.substring(0,1).toUpperCase() + term.substring(1);
+			ArrayList<String> firstCaptitalList = placeMapping.get(firstCapitalized);
+			if(Util.isValid(firstCaptitalList)) {
+				queryList = QueryHandler.performOR(queryList, firstCaptitalList);
+			}
+			
+			String fullCap = term.toUpperCase();
+			ArrayList<String> fullCapList = placeMapping.get(fullCap);
+			if(Util.isValid(fullCapList)) {
+				queryList = QueryHandler.performOR(queryList, fullCapList);
+			}
+			String fulllowercase = term.toLowerCase();
+			ArrayList<String> fullLowList = placeMapping.get(fulllowercase);
+			if(Util.isValid(fullLowList)) {
+				queryList = QueryHandler.performOR(queryList, fullLowList);
+			}
+			
+			return queryList;
 		}
 
 		case CATEGORY: {

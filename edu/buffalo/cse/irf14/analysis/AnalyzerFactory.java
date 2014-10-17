@@ -48,7 +48,7 @@ public class AnalyzerFactory {
 		switch (fieldName){
 		case CONTENT: return getContentAnalyser(stream);
 		case PLACE: return getPlaceAnalyser(stream);
-		case AUTHOR : 
+		case AUTHOR: return getDefaultAnalyser(stream);
 		case CATEGORY: return getDefaultAnalyser(stream);
 		default: return null;
 		}

@@ -91,7 +91,7 @@ public class QueryParser {
 				currentToken = currentToken.replace("(", "");
 			}
 			
-			if(currentToken.startsWith("\"")) {
+			if(currentToken.contains("\"")) {
 				int j = i + 1;
 				while(j < inputList.size()) {
 					currentToken += " " + inputList.get(j);
