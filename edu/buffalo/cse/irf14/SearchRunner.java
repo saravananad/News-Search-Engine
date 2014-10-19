@@ -54,6 +54,7 @@ public class SearchRunner {
 	 * @param model : Scoring Model to use for ranking results
 	 */
 	public void query(String userQuery, ScoringModel model) {
+		long startTime = System.currentTimeMillis();
 		Query query = QueryParser.parse(userQuery, Util.getDefaultBooleanOperator());
 		QueryHandler handler = new QueryHandler(indexDirectory, query);
 		ArrayList<String> postingList = handler.handleQuery(query);
@@ -67,9 +68,15 @@ public class SearchRunner {
 			}
 			
 			Map<String, String> results = ranking.evaluatePostings();
+			long endTime   = System.currentTimeMillis();
+			long totalTime = endTime - startTime;
 			if(results != null) {
 				Iterator<Entry<String, String>> iterator = results.entrySet().iterator();
 				StringBuilder stringBuilder = new StringBuilder();
+				stringBuilder.append("The following are the results that closely match the query \"" +userQuery+"\" -");
+				stringBuilder.append("\n");
+				stringBuilder.append("(..fetched in "+totalTime+"ms.)\n");
+				int rankDocument = 1;
 				while(iterator.hasNext()) {
 					BufferedReader reader = null;
 					try {
@@ -119,16 +126,18 @@ public class SearchRunner {
 										}
 									}
 									break;
-								}					
+								}							
 							}
 						}
 						
-						stringBuilder.append(title + "\n");
+						stringBuilder.append("\n" +rankDocument +". Document "+ next.getKey() +" Title -> "+title + "\n");
+						stringBuilder.append("Relevancy score => "+next.getValue());
 						if(Util.isValidString(snippet)) {
-							stringBuilder.append(snippet + "\n\n\n");
+							stringBuilder.append("\n\n"+ snippet + "\n\n\n");
 						} else {
-							stringBuilder.append(firstLine + "\n\n\n");
+							stringBuilder.append("\n\n" +firstLine + "\n\n\n");
 						}
+						rankDocument++;
 						
 					} catch (Exception e) {
 						System.err.println(e);
@@ -141,6 +150,7 @@ public class SearchRunner {
 					}
 				}
 				stream.print(stringBuilder.toString());
+				System.out.println(stringBuilder.toString());
 			}
 		}
 	}
