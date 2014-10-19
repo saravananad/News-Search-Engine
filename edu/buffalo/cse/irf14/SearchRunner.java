@@ -42,6 +42,7 @@ public class SearchRunner {
 	 */
 	public SearchRunner(String indexDir, String corpusDir, char mode, PrintStream stream) {
 		this.indexDirectory = indexDir;
+		corpusDir = corpusDir.endsWith("/") ? corpusDir : corpusDir + File.separator;
 		this.corpusDirectory = corpusDir;
 		this.mode = mode;
 		this.stream = stream;
@@ -55,15 +56,92 @@ public class SearchRunner {
 	public void query(String userQuery, ScoringModel model) {
 		Query query = QueryParser.parse(userQuery, Util.getDefaultBooleanOperator());
 		QueryHandler handler = new QueryHandler(indexDirectory, query);
-		RankingModel ranking;
 		ArrayList<String> postingList = handler.handleQuery(query);
-		if (Util.isValid(postingList)){
+
+		if(Util.isValid(postingList)) {
+			RankingModel ranking;
 			if(ScoringModel.TFIDF == model) {
 				ranking = new TFIDFModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
 			} else {
 				ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
-			}	
+			}
+			
 			Map<String, String> results = ranking.evaluatePostings();
+			if(results != null) {
+				Iterator<Entry<String, String>> iterator = results.entrySet().iterator();
+				StringBuilder stringBuilder = new StringBuilder();
+				while(iterator.hasNext()) {
+					BufferedReader reader = null;
+					try {
+						Entry<String, String> next = iterator.next();
+						File file = new File(this.corpusDirectory + next.getKey());
+						reader = new BufferedReader(new FileReader(file));
+						String line = null, title = null,firstLine = "", snippet = null;;
+						boolean isTitle = true;
+						boolean isFirstLine = true;
+						String[] queryTerms = query.toString().replaceAll("\\<|\\>", "").split(Util.AND + "|" +Util.OR);
+						while((line = reader.readLine()) != null) {
+							if(!line.trim().isEmpty()) {
+								if(isTitle) {
+									title = line + "\n";
+									isTitle = false;
+								} else if(isFirstLine) {
+									if(line.contains(".")) {
+										String[] split = line.split("\\.");
+										firstLine += split[0] + ".";
+										isFirstLine = false;
+									} else {
+										firstLine += " " + line.trim();
+									}
+								}
+								
+								if(queryTerms != null) {
+									for(String term : queryTerms) {
+										term = term.replaceAll("\\{|\\}", "").split(":")[1].trim();
+										if(line.contains(term)) {
+											snippet = "..." + line.trim();
+											break;
+										}
+									}
+								}
+								
+								if(Util.isValid(title) && Util.isValid(snippet)) {
+									while(!snippet.contains(".")) {
+										line = reader.readLine();
+										if(!line.trim().isEmpty()) {
+											if(line.contains(".")) {
+												String[] split = line.split("\\.");
+												snippet += " " + split[0] + ".";
+												break;
+											} else {
+												snippet += line;
+											}
+										}
+									}
+									break;
+								}							
+							}
+						}
+						
+						stringBuilder.append(title + "\n");
+						if(Util.isValidString(snippet)) {
+							stringBuilder.append(snippet + "\n\n\n");
+						} else {
+							stringBuilder.append(firstLine + "\n\n\n");
+						}
+						
+					} catch (Exception e) {
+						System.err.println(e);
+					} finally {
+						try {
+							reader.close();
+						} catch (IOException e) {
+							System.err.println(e);
+						}
+					}
+				}
+				stream.print(stringBuilder.toString());
+			}
 		}
 	}
 
@@ -78,14 +156,15 @@ public class SearchRunner {
 			String line = null;
 			StringBuilder stringBuilder = new StringBuilder();
 			long noOfResults = 0;
-			Map<String, String> results = null;
 			while((line = reader.readLine()) != null) {
-				String[] split = line.split(":");
+				String[] split = line.split(":", 2);
 				if(split.length == 2) {
 					String queryString = split[1].replaceAll("\\{|\\}", "").trim();
 					Query query = QueryParser.parse(queryString, Util.getDefaultBooleanOperator());
 					QueryHandler handler = new QueryHandler(indexDirectory, query);
 					ArrayList<String> postingList = handler.handleQuery(query);
+					Map<String, String> results = null;
+					
 					if (Util.isValid(postingList)){
 						RankingModel ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
 						results = ranking.evaluatePostings();
