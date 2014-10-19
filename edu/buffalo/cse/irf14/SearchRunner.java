@@ -1,15 +1,22 @@
 package edu.buffalo.cse.irf14;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import edu.buffalo.cse.irf14.analysis.Util;
 import edu.buffalo.cse.irf14.query.OkapiModel;
 import edu.buffalo.cse.irf14.query.Query;
 import edu.buffalo.cse.irf14.query.QueryHandler;
 import edu.buffalo.cse.irf14.query.QueryParser;
+import edu.buffalo.cse.irf14.query.RankingModel;
 import edu.buffalo.cse.irf14.query.TFIDFModel;
 
 /**
@@ -48,18 +55,16 @@ public class SearchRunner {
 	public void query(String userQuery, ScoringModel model) {
 		Query query = QueryParser.parse(userQuery, Util.getDefaultBooleanOperator());
 		QueryHandler handler = new QueryHandler(indexDirectory, query);
-		switch (model){
-		case TFIDF :{
-		TFIDFModel tfidfObj = new TFIDFModel(indexDirectory, handler.analyzedTermList, handler.docFrequenciesMap, handler.handleQuery(query));
-		Map<String, String> searchResults = tfidfObj.performTFIDFRanking();
+		RankingModel ranking;
+		ArrayList<String> postingList = handler.handleQuery(query);
+		
+		if(ScoringModel.TFIDF == model) {
+			ranking = new TFIDFModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
+		} else {
+			ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
 		}
-		break;
-		case OKAPI: {
-		OkapiModel okapiObj = new OkapiModel(indexDirectory, handler.analyzedTermList, handler.docFrequenciesMap, handler.handleQuery(query));
-		Map<String, String> searchResults = okapiObj.performOkapiRanking();
-		}
-		break;
-		}
+		
+		Map<String, String> results = ranking.evaluatePostings();
 	}
 
 	/**
@@ -67,7 +72,47 @@ public class SearchRunner {
 	 * @param queryFile : The file from which queries are to be read and executed
 	 */
 	public void query(File queryFile) {
-		//TODO: IMPLEMENT THIS METHOD
+		BufferedReader reader = null;
+		try {
+			reader = new BufferedReader(new FileReader(queryFile));
+			String line = null;
+			StringBuilder stringBuilder = new StringBuilder();
+			long noOfResults = 0;
+			while((line = reader.readLine()) != null) {
+				String[] split = line.split(":");
+				if(split.length == 2) {
+					String queryString = split[1].replaceAll("\\{|\\}", "").trim();
+					Query query = QueryParser.parse(queryString, Util.getDefaultBooleanOperator());
+					QueryHandler handler = new QueryHandler(indexDirectory, query);
+					ArrayList<String> postingList = handler.handleQuery(query);
+					RankingModel ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
+					Map<String, String> results = ranking.evaluatePostings();
+					if(results != null) {
+						noOfResults++;
+						stringBuilder.append(split[0] + ":");
+						stringBuilder.append("{ ");
+						Iterator<Entry<String, String>> iterator = results.entrySet().iterator();
+						while(iterator.hasNext()) {
+							Entry<String, String> next = iterator.next();
+							stringBuilder.append(next.getKey() + "#" + next.getValue() + ", ");
+						}
+						stringBuilder.setCharAt(stringBuilder.length() - 2, ' ');
+						stringBuilder.setCharAt(stringBuilder.length() - 1, '}');
+						stringBuilder.append("\n");
+					}
+				}
+			}
+			stream.append("numResults=" + noOfResults + "\n");
+			stream.append(stringBuilder.toString());
+		} catch (Exception e) {
+			System.err.println(e);
+		} finally {
+			try {
+				reader.close();
+			} catch (IOException e) {
+				System.err.println(e);
+			}
+		}
 	}
 
 	/**

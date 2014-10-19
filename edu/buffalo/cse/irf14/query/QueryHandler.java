@@ -22,8 +22,8 @@ public class QueryHandler {
 	private Stack<Object> operandStack = new Stack<Object>();
 	Tokenizer tokenizer = new Tokenizer();
 
-	public static ArrayList<String> analyzedTermList = new ArrayList<String>();
-	public static Map<String, String> docFrequenciesMap = new TreeMap<String, String>();
+	private ArrayList<String> analyzedTermList = new ArrayList<String>();
+	private Map<String, String> docFrequenciesMap = new TreeMap<String, String>();
 
 	String indexDir = null;
 
@@ -301,5 +301,13 @@ public class QueryHandler {
 			postings1.removeAll(intersection);
 			return postings1;
 		}
+	}
+	
+	public ArrayList<String> getAnalyzedTermList() {
+		return this.analyzedTermList;
+	}
+	
+	public Map<String, String> getDocFrequencyMap() {
+		return this.docFrequenciesMap;
 	}
 }

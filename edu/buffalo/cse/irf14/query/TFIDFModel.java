@@ -11,7 +11,7 @@ import java.util.Map.Entry;
 import edu.buffalo.cse.irf14.analysis.Util;
 import edu.buffalo.cse.irf14.index.IndexType;
 
-public class TFIDFModel {
+public class TFIDFModel implements RankingModel {
 
 	String indexDir;
 	ArrayList<String> userQuery;
@@ -169,7 +169,7 @@ public class TFIDFModel {
 		return maps;
 	}
 
-	public Map<String, String> performTFIDFRanking(){
+	public Map<String, String> evaluatePostings(){
 		String[] queryArray = userQuery.toArray(new String[userQuery.size()]);
 
 		// Construct the TF-IDF Mesh

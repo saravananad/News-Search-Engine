@@ -10,7 +10,7 @@ import java.util.TreeMap;
 import edu.buffalo.cse.irf14.analysis.Util;
 import edu.buffalo.cse.irf14.index.IndexType;
 
-public class OkapiModel {
+public class OkapiModel implements RankingModel{
 
 	private double k1 = 1.2d;
 	private double k3 = 1.8d;
@@ -117,7 +117,7 @@ public class OkapiModel {
 		return ((k3 + 1d) * queryFreq) / ((k3 + queryFreq)) * weight(termFreq, docLength, docFreq);
 	}
 	
-	public Map<String, String> performOkapiRanking(){
+	public Map<String, String> evaluatePostings(){
 		String[] queryArray = userQuery.toArray(new String[userQuery.size()]);
 		
 		// Construct the TF-IDF Mesh
