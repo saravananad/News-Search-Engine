@@ -57,14 +57,14 @@ public class SearchRunner {
 		QueryHandler handler = new QueryHandler(indexDirectory, query);
 		RankingModel ranking;
 		ArrayList<String> postingList = handler.handleQuery(query);
-		
-		if(ScoringModel.TFIDF == model) {
-			ranking = new TFIDFModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
-		} else {
-			ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
+		if (Util.isValid(postingList)){
+			if(ScoringModel.TFIDF == model) {
+				ranking = new TFIDFModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
+			} else {
+				ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
+			}	
+			Map<String, String> results = ranking.evaluatePostings();
 		}
-		
-		Map<String, String> results = ranking.evaluatePostings();
 	}
 
 	/**
@@ -78,6 +78,7 @@ public class SearchRunner {
 			String line = null;
 			StringBuilder stringBuilder = new StringBuilder();
 			long noOfResults = 0;
+			Map<String, String> results = null;
 			while((line = reader.readLine()) != null) {
 				String[] split = line.split(":");
 				if(split.length == 2) {
@@ -85,8 +86,10 @@ public class SearchRunner {
 					Query query = QueryParser.parse(queryString, Util.getDefaultBooleanOperator());
 					QueryHandler handler = new QueryHandler(indexDirectory, query);
 					ArrayList<String> postingList = handler.handleQuery(query);
-					RankingModel ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
-					Map<String, String> results = ranking.evaluatePostings();
+					if (Util.isValid(postingList)){
+						RankingModel ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
+						results = ranking.evaluatePostings();
+					}
 					if(results != null) {
 						noOfResults++;
 						stringBuilder.append(split[0] + ":");

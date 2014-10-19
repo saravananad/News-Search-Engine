@@ -284,8 +284,27 @@ public class Util {
 			if (authorMapping.isEmpty()){
 				initMaps(indexDirName,Util.authorIndexFile, authorMapping);
 			}
-			ArrayList<String> postingsList = authorMapping.get(term);
-			return postingsList;
+ArrayList<String> queryList = authorMapping.get(term);
+			
+			String firstCapitalized = term.substring(0,1).toUpperCase() + term.substring(1);
+			ArrayList<String> firstCaptitalList = authorMapping.get(firstCapitalized);
+			if(Util.isValid(firstCaptitalList)) {
+				queryList = QueryHandler.performOR(queryList, firstCaptitalList);
+			}
+			
+			String fullCap = term.toUpperCase();
+			ArrayList<String> fullCapList = authorMapping.get(fullCap);
+			if(Util.isValid(fullCapList)) {
+				queryList = QueryHandler.performOR(queryList, fullCapList);
+			}
+			
+			String fulllowercase = term.toLowerCase();
+			ArrayList<String> fullLowList = authorMapping.get(fulllowercase);
+			if(Util.isValid(fullLowList)) {
+				queryList = QueryHandler.performOR(queryList, fullLowList);
+			}
+			
+			return queryList;
 		}
 
 		case TERM: {

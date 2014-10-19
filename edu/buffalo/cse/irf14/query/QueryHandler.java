@@ -193,16 +193,22 @@ public class QueryHandler {
 					term += stream.next();
 				}
 			}		
-			ArrayList<String> postings = getPostings(this.indexDir , stringSplit[0], term.trim());
-			if (term.isEmpty()){
-				analyzedTermList.add(null);
-				docFrequenciesMap.put("null", Util.ZERO);
+			ArrayList<String> postings = null;
+			if (Util.isValidString(term)){
+				postings = getPostings(this.indexDir , stringSplit[0], term.trim());	
+				operandStack.push(postings);			
 			}
-			else {
+			else
+				operandStack.push("null");
+			if (Util.isValid(postings) && Util.isValidString(term)){
 				analyzedTermList.add(stringSplit[0] + ":" +term);
 				docFrequenciesMap.put(term, String.valueOf(postings.size())); //TO-DO NULL CHECKING!
 			}
-			operandStack.push(postings);
+			else {
+				String addTerm = (Util.isValidString(term))? term : "null";
+				analyzedTermList.add(stringSplit[0] + ":" + addTerm);
+				docFrequenciesMap.put(addTerm, Util.ZERO);
+			}
 		} catch (TokenizerException e) {
 			System.err.println(e);
 		}

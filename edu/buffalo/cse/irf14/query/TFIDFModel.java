@@ -30,10 +30,11 @@ public class TFIDFModel implements RankingModel {
 		for (String docID : postingsArray){
 			Map<String, String> idFreqMap = new TreeMap<String, String>();
 			for (String queryTerm : userQuery){
-				if (queryTerm.equals("null"))
-					idFreqMap.put(queryTerm, Util.ZERO);
+				String splitString[] = queryTerm.split(":");
+				if (splitString[1].equals("null")){
+					idFreqMap.put(splitString[1], Util.ZERO);
+				}
 				else {
-					String splitString[] = queryTerm.split(":");
 					IndexType indexType = IndexType.valueOf(splitString[0].toUpperCase());
 					switch (indexType){
 					case TERM: {
