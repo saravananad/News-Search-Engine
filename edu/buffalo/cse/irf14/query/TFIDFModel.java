@@ -47,7 +47,7 @@ public class TFIDFModel implements RankingModel {
 						String occAsAnalyzedTerm = Util.ZERO;
 						String occAsFullCapsTerm = Util.ZERO;
 						String occAsfirstCharCapTerm = Util.ZERO;
-						
+
 						// Record Occurrences Neatly
 						if (Util.isValid(termFreqMap)){
 							if (Util.isValid(termFreqMap.get(docID)))
@@ -72,8 +72,12 @@ public class TFIDFModel implements RankingModel {
 					case AUTHOR: {
 						String authorName = splitString[1];
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, authorName.trim());
-						if (postingsList.contains(docID))
-							idFreqMap.put(authorName, Util.ONE);
+						if (Util.isValid(postingsList)){
+							if (postingsList.contains(docID))
+								idFreqMap.put(authorName, Util.ONE);
+							else
+								idFreqMap.put(authorName, Util.ZERO);
+						}
 						else
 							idFreqMap.put(authorName, Util.ZERO);					
 					}
@@ -81,8 +85,12 @@ public class TFIDFModel implements RankingModel {
 					case CATEGORY: {
 						String categoryName = splitString[1];
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, categoryName);
-						if (postingsList.contains(docID))
-							idFreqMap.put(categoryName, Util.ONE);
+						if (Util.isValid(postingsList)){
+							if (postingsList.contains(docID))
+								idFreqMap.put(categoryName, Util.ONE);
+							else
+								idFreqMap.put(categoryName, Util.ZERO);
+						}
 						else
 							idFreqMap.put(categoryName, Util.ZERO);
 					}
@@ -90,8 +98,12 @@ public class TFIDFModel implements RankingModel {
 					case PLACE: {
 						String placeName = splitString[1].toLowerCase();
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, placeName);
-						if (postingsList.contains(docID))
-							idFreqMap.put(splitString[1], Util.ONE);
+						if (Util.isValid(postingsList)){
+							if (postingsList.contains(docID))
+								idFreqMap.put(splitString[1], Util.ONE);
+							else
+								idFreqMap.put(splitString[1], Util.ZERO);
+						}
 						else
 							idFreqMap.put(splitString[1], Util.ZERO);
 					}
@@ -110,7 +122,7 @@ public class TFIDFModel implements RankingModel {
 			Map<String, String> innerMap = entry.getValue();
 			for (Entry<String, String> entryInner : innerMap.entrySet()){
 				if (!entryInner.getValue().equals(Util.ZERO)){
-					double logFreq = 1 + (Math.log(Double.parseDouble(entryInner.getValue())));			
+					double logFreq = (Math.log(1 + Double.parseDouble(entryInner.getValue())));			
 					newFrequency = String.valueOf(Double.valueOf(Util.newFormat.format(logFreq)));
 					entryInner.setValue(newFrequency);
 					entry.setValue(innerMap);
@@ -122,7 +134,7 @@ public class TFIDFModel implements RankingModel {
 
 	public Map<String, String> calculateIDF(Map<String, String> docFreqMap){
 		for (Entry<String, String> entry : docFreqMap.entrySet()){
-			if (!entry.getKey().equals("null")){
+			if (!entry.getValue().equals(Util.ZERO)){
 				String newFrequency = "";
 				double logFreq = Math.log(Util.totalDocuments/Double.parseDouble(entry.getValue()));			
 				newFrequency = String.valueOf(Double.valueOf(Util.newFormat.format(logFreq)));

@@ -19,7 +19,7 @@ public class OkapiModel implements RankingModel{
 	ArrayList<String> userQuery;
 	ArrayList<String> postings;
 	Map<String, String> docFreqMap;
-	
+
 	public OkapiModel(String indexDir, ArrayList<String> query, Map<String, String> docMap, ArrayList<String> postingsList) {
 		this.indexDir = indexDir;
 		this.userQuery = query;
@@ -49,7 +49,7 @@ public class OkapiModel implements RankingModel{
 						String occAsAnalyzedTerm = Util.ZERO;
 						String occAsFullCapsTerm = Util.ZERO;
 						String occAsfirstCharCapTerm = Util.ZERO;
-						
+
 						// Record Occurrences Neatly
 						if (Util.isValid(termFreqMap)){
 							if (Util.isValid(termFreqMap.get(docID)))
@@ -74,8 +74,12 @@ public class OkapiModel implements RankingModel{
 					case AUTHOR: {
 						String authorName = splitString[1];
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, authorName.trim());
-						if (postingsList.contains(docID))
-							idFreqMap.put(authorName, Util.ONE);
+						if (Util.isValid(postingsList)){
+							if (postingsList.contains(docID))
+								idFreqMap.put(authorName, Util.ONE);
+							else
+								idFreqMap.put(authorName, Util.ZERO);
+						}
 						else
 							idFreqMap.put(authorName, Util.ZERO);					
 					}
@@ -83,8 +87,12 @@ public class OkapiModel implements RankingModel{
 					case CATEGORY: {
 						String categoryName = splitString[1];
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, categoryName);
-						if (postingsList.contains(docID))
-							idFreqMap.put(categoryName, Util.ONE);
+						if (Util.isValid(postingsList)){
+							if (postingsList.contains(docID))
+								idFreqMap.put(categoryName, Util.ONE);
+							else
+								idFreqMap.put(categoryName, Util.ZERO);
+						}
 						else
 							idFreqMap.put(categoryName, Util.ZERO);
 					}
@@ -92,8 +100,12 @@ public class OkapiModel implements RankingModel{
 					case PLACE: {
 						String placeName = splitString[1].toLowerCase();
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, placeName);
-						if (postingsList.contains(docID))
-							idFreqMap.put(splitString[1], Util.ONE);
+						if (Util.isValid(postingsList)){
+							if (postingsList.contains(docID))
+								idFreqMap.put(splitString[1], Util.ONE);
+							else
+								idFreqMap.put(splitString[1], Util.ZERO);
+						}
 						else
 							idFreqMap.put(splitString[1], Util.ZERO);
 					}
@@ -117,14 +129,14 @@ public class OkapiModel implements RankingModel{
 		double queryFreq = Double.parseDouble(queryFrequency);
 		return ((k3 + 1d) * queryFreq) / ((k3 + queryFreq)) * weight(termFreq, docLength, docFreq);
 	}
-	
+
 	public Map<String, String> evaluatePostings(){
 		String[] queryArray = userQuery.toArray(new String[userQuery.size()]);
-		
+
 		// Construct the TF-IDF Mesh
 		Map<String, Map<String, String>> termOccurrence = constructTermFreqMap(queryArray, postings);
 		Map<String, String> relevanceMap = new TreeMap<String, String>();
-		
+
 		// Construct a map with query term as key and its occurrence in query as value
 		Set<String> querySet = new HashSet<String>(userQuery);
 		Map<String, String> tfQueryMap = new TreeMap<String, String>();
@@ -134,7 +146,7 @@ public class OkapiModel implements RankingModel{
 		}
 
 		Map<String, String> reverseMap = new TreeMap<String, String>(Collections.reverseOrder());
-		
+
 		// Construct Okapi Relevancy Model Scores
 		for (String docID : postings){
 			double relevanceScore = 0.0d;
@@ -150,6 +162,14 @@ public class OkapiModel implements RankingModel{
 		}
 		int size = (reverseMap.size() < 10) ? reverseMap.size() : 10;
 		Map<String, String> topDocs = Util.getTopDocs(reverseMap, relevanceMap, size);
+		
+		//Scale the scores between 0 and 1
+		ArrayList<String> valuesList = new ArrayList<String>(topDocs.values());
+		Double largestValue = Double.parseDouble(valuesList.get(0));
+		for (Map.Entry<String, String> entry : topDocs.entrySet()) {
+			Double scaledValue = Double.parseDouble(entry.getValue())/largestValue;
+			topDocs.put(entry.getKey(), String.valueOf(Util.newFormat.format(scaledValue)));
+		}
 		return topDocs;
 	}
 }

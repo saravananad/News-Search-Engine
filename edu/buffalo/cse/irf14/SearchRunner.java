@@ -58,6 +58,7 @@ public class SearchRunner {
 		Query query = QueryParser.parse(userQuery, Util.getDefaultBooleanOperator());
 		QueryHandler handler = new QueryHandler(indexDirectory, query);
 		ArrayList<String> postingList = handler.handleQuery(query);
+		StringBuilder stringBuilder = new StringBuilder();
 
 		if(Util.isValid(postingList)) {
 			RankingModel ranking;
@@ -72,7 +73,6 @@ public class SearchRunner {
 			long totalTime = endTime - startTime;
 			if(results != null) {
 				Iterator<Entry<String, String>> iterator = results.entrySet().iterator();
-				StringBuilder stringBuilder = new StringBuilder();
 				stringBuilder.append("The following are the results that closely match the query \"" +userQuery+"\" -");
 				stringBuilder.append("\n");
 				stringBuilder.append("(..fetched in "+totalTime+"ms.)\n");
@@ -149,10 +149,12 @@ public class SearchRunner {
 						}
 					}
 				}
-				stream.print(stringBuilder.toString());
-				System.out.println(stringBuilder.toString());
 			}
 		}
+		else{
+			stringBuilder.append("Oops! Your search - " +"\""+userQuery+"\" did not match any documents!");
+		}
+		stream.print(stringBuilder.toString());
 	}
 
 	/**
