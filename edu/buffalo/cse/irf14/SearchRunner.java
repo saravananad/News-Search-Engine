@@ -95,7 +95,7 @@ public class SearchRunner {
 									}
 								}
 								
-								if(queryTerms != null) {
+								if(!isTitle && queryTerms != null) {
 									for(String term : queryTerms) {
 										term = term.replaceAll("\\{|\\}", "").split(":")[1].trim();
 										if(line.contains(term)) {
@@ -119,7 +119,7 @@ public class SearchRunner {
 										}
 									}
 									break;
-								}							
+								}					
 							}
 						}
 						
