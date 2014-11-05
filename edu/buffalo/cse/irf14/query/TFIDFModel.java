@@ -31,10 +31,9 @@ public class TFIDFModel implements RankingModel {
 			Map<String, String> idFreqMap = new TreeMap<String, String>();
 			for (String queryTerm : userQuery){
 				String splitString[] = queryTerm.split(":");
-				if (splitString[1].equals("null")){
+				if ("null".equals(splitString[1])){
 					idFreqMap.put(splitString[1], Util.ZERO);
-				}
-				else {
+				} else {
 					IndexType indexType = IndexType.valueOf(splitString[0].toUpperCase());
 					switch (indexType){
 					case TERM: {
@@ -49,63 +48,64 @@ public class TFIDFModel implements RankingModel {
 						String occAsfirstCharCapTerm = Util.ZERO;
 
 						// Record Occurrences Neatly
-						if (Util.isValid(termFreqMap)){
-							if (Util.isValid(termFreqMap.get(docID)))
-								occAsAnalyzedTerm = termFreqMap.get(docID).toString();
+						if (Util.isValid(termFreqMap) && Util.isValid(termFreqMap.get(docID))){
+							occAsAnalyzedTerm = termFreqMap.get(docID).toString();
 						}
-						if (Util.isValid(capTermFreqMap)){
-							if (Util.isValid(capTermFreqMap.get(docID)))
-								occAsFullCapsTerm = capTermFreqMap.get(docID).toString();
+						if (Util.isValid(capTermFreqMap) && Util.isValid(capTermFreqMap.get(docID))){
+							occAsFullCapsTerm = capTermFreqMap.get(docID).toString();
 						}
-						if (Util.isValid(firstLetterUpperMap)){
-							if (Util.isValid(firstLetterUpperMap.get(docID)))
-								occAsfirstCharCapTerm = firstLetterUpperMap.get(docID).toString();
+						if (Util.isValid(firstLetterUpperMap) && Util.isValid(firstLetterUpperMap.get(docID))){
+							occAsfirstCharCapTerm = firstLetterUpperMap.get(docID).toString();
 						}
+
 						Integer totalOccurrences = Integer.parseInt(occAsAnalyzedTerm) + Integer.parseInt(occAsFullCapsTerm) + Integer.parseInt(occAsfirstCharCapTerm);
 						if (termFreqMap == null && capTermFreqMap == null && firstLetterUpperMap == null){
 							idFreqMap.put(normalizedQueryTerm, Util.ZERO);
-						}
-						else 
+						} else {
 							idFreqMap.put(normalizedQueryTerm, String.valueOf(totalOccurrences));
+						}
 					}
 					break;
 					case AUTHOR: {
 						String authorName = splitString[1];
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, authorName.trim());
 						if (Util.isValid(postingsList)){
-							if (postingsList.contains(docID))
+							if (postingsList.contains(docID)) {
 								idFreqMap.put(authorName, Util.ONE);
-							else
+							} else {
 								idFreqMap.put(authorName, Util.ZERO);
-						}
-						else
+							}
+						} else {
 							idFreqMap.put(authorName, Util.ZERO);					
+						}
 					}
 					break;
 					case CATEGORY: {
 						String categoryName = splitString[1];
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, categoryName);
 						if (Util.isValid(postingsList)){
-							if (postingsList.contains(docID))
+							if (postingsList.contains(docID)) {
 								idFreqMap.put(categoryName, Util.ONE);
-							else
+							} else {
 								idFreqMap.put(categoryName, Util.ZERO);
-						}
-						else
+							}
+						} else {
 							idFreqMap.put(categoryName, Util.ZERO);
+						}
 					}
 					break;
 					case PLACE: {
 						String placeName = splitString[1].toLowerCase();
 						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, placeName);
 						if (Util.isValid(postingsList)){
-							if (postingsList.contains(docID))
+							if (postingsList.contains(docID)) {
 								idFreqMap.put(splitString[1], Util.ONE);
-							else
+							} else {
 								idFreqMap.put(splitString[1], Util.ZERO);
-						}
-						else
+							}
+						} else {
 							idFreqMap.put(splitString[1], Util.ZERO);
+						}
 					}
 					break;
 					}
@@ -117,13 +117,12 @@ public class TFIDFModel implements RankingModel {
 	}
 
 	public Map<String, Map<String, String>> calculateTF(Map<String, Map<String, String>> postings){
-		String newFrequency = "";
 		for(Entry<String, Map<String, String>> entry : postings.entrySet()) {
 			Map<String, String> innerMap = entry.getValue();
 			for (Entry<String, String> entryInner : innerMap.entrySet()){
-				if (!entryInner.getValue().equals(Util.ZERO)){
+				if (!Util.ZERO.equals(entryInner.getValue())){
 					double logFreq = (Math.log(1 + Double.parseDouble(entryInner.getValue())));			
-					newFrequency = String.valueOf(Double.valueOf(Util.newFormat.format(logFreq)));
+					String newFrequency = String.valueOf(Double.valueOf(Util.newFormat.format(logFreq)));
 					entryInner.setValue(newFrequency);
 					entry.setValue(innerMap);
 				}
@@ -134,10 +133,9 @@ public class TFIDFModel implements RankingModel {
 
 	public Map<String, String> calculateIDF(Map<String, String> docFreqMap){
 		for (Entry<String, String> entry : docFreqMap.entrySet()){
-			if (!entry.getValue().equals(Util.ZERO)){
-				String newFrequency = "";
+			if (!Util.ZERO.equals(entry.getValue())){
 				double logFreq = Math.log(Util.totalDocuments/Double.parseDouble(entry.getValue()));			
-				newFrequency = String.valueOf(Double.valueOf(Util.newFormat.format(logFreq)));
+				String newFrequency = String.valueOf(Double.valueOf(Util.newFormat.format(logFreq)));
 				entry.setValue(newFrequency);
 			}
 		}
@@ -148,8 +146,8 @@ public class TFIDFModel implements RankingModel {
 		for(Entry<String, Map<String, String>> entry : tfMap.entrySet()) {
 			Map<String, String> innerMap = entry.getValue();
 			for (Entry<String, String> entryInner : innerMap.entrySet()){
-				if(!entryInner.getValue().equals(Util.ZERO)){
-					Double tfIdf = Double.parseDouble(entryInner.getValue())*Double.parseDouble(idfMap.get(entryInner.getKey()));
+				if(!Util.ZERO.equals(entryInner.getValue())){
+					Double tfIdf = Double.parseDouble(entryInner.getValue()) * Double.parseDouble(idfMap.get(entryInner.getKey()));
 					entryInner.setValue(String.valueOf(Double.valueOf(Util.newFormat.format(tfIdf))));
 				}
 			}
@@ -171,9 +169,9 @@ public class TFIDFModel implements RankingModel {
 				vectorOneLen += Math.pow(Double.parseDouble(innerEntry.getValue()), 2);
 				vectorTwoLen += Math.pow(Double.parseDouble(querytfidf.get(innerEntry.getKey())), 2);
 			}
-			Double score = (vectorsProduct)/((Math.sqrt(vectorOneLen)*(Math.sqrt(vectorTwoLen))));
+			Double score = vectorsProduct / (Math.sqrt(vectorOneLen) * Math.sqrt(vectorTwoLen));
 			Integer docLength = Util.docSizeMap.get(entry.getKey());
-			score = score/(docLength);
+			score = score / docLength;
 			scoreMap.put(entry.getKey(), String.valueOf(Util.newFormat.format(score)));
 			reverseMap.put(String.valueOf(Util.newFormat.format(score)), entry.getKey());
 		}
