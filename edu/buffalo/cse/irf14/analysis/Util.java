@@ -226,13 +226,16 @@ public class Util {
 
 	public static Map<String, String> getTopDocs(Map<String, String> reverseMap, Map<String, String> relevanceMap, int size){
 		Map<String, String> topDocsMap = new LinkedHashMap<String, String>();
-		for (Map.Entry<String, String> entry : reverseMap.entrySet()) {
-			String docID = entry.getValue();
-			topDocsMap.put(docID, relevanceMap.get(docID));
-			if (topDocsMap.size() == size)
-				break;
+		if (isValid(reverseMap) && isValid(relevanceMap)){
+			for (Map.Entry<String, String> entry : reverseMap.entrySet()) {
+				String docID = entry.getValue();
+				topDocsMap.put(docID, relevanceMap.get(docID));
+				if (topDocsMap.size() == size)
+					break;
+			}
+			return topDocsMap;
 		}
-		return topDocsMap;
+		return null;
 	}
 
 	private static void initMaps(String indexDirName, String fileName, Map<String, ArrayList<String>> mapType){

@@ -14,12 +14,12 @@ public class OkapiModel implements RankingModel{
 	private static final double k1 = 1.2d;
 	private static final double k3 = 1.8d;
 	private static final double b = 0.75d;
-	
+
 	String indexDir = null;
 	ArrayList<String> userQuery = new ArrayList<String>();
 	ArrayList<String> postings = new ArrayList<String>();
 	Map<String, String> docFreqMap = new TreeMap<String, String>();
-	
+
 	public OkapiModel(String indexDir, ArrayList<String> query, Map<String, String> docMap, ArrayList<String> postingsList) {
 		this.indexDir = indexDir;
 		this.userQuery = query;
@@ -47,11 +47,13 @@ public class OkapiModel implements RankingModel{
 		Map<String, String> relevanceMap = new TreeMap<String, String>();
 
 		// Construct a map with query term as key and its occurrence in query as value
-		Set<String> querySet = new HashSet<String>(userQuery);
 		Map<String, String> tfQueryMap = new TreeMap<String, String>();
-		for (String queryTerm : querySet) {
-			String splitString[] = queryTerm.split(":");
-			tfQueryMap.put(splitString[1], String.valueOf(Collections.frequency(querySet, queryTerm)));
+		Set<String> querySet = new HashSet<String>(userQuery);
+		if (Util.isValid(querySet) && !querySet.contains(null)){
+			for (String queryTerm : querySet) {
+				String splitString[] = queryTerm.split(":");
+				tfQueryMap.put(splitString[1], String.valueOf(Collections.frequency(querySet, queryTerm)));
+			}
 		}
 
 		Map<String, String> reverseMap = new TreeMap<String, String>(Collections.reverseOrder());
@@ -64,21 +66,28 @@ public class OkapiModel implements RankingModel{
 				String termFrequency = termOccurrence.get(docID).get(queryTermSplit[1]);
 				Integer docLength = Util.docSizeMap.get(docID);
 				String docFrequency = docFreqMap.get(queryTermSplit[1]);
-				relevanceScore += score(termFrequency, docLength, docFrequency, tfQueryMap.get(queryTermSplit[1]));
+				if (Util.isValid(termFrequency) && Util.isValid(docFrequency) && Util.isValid(tfQueryMap.get(queryTermSplit[1]))){
+					relevanceScore += score(termFrequency, docLength, docFrequency, tfQueryMap.get(queryTermSplit[1]));
+				}
 			}
 			relevanceMap.put(docID, String.valueOf(Double.valueOf(Util.newFormat.format(relevanceScore))));
 			reverseMap.put(String.valueOf(Double.valueOf(Util.newFormat.format(relevanceScore))), docID);
 		}
 		int size = (reverseMap.size() < 10) ? reverseMap.size() : 10;
 		Map<String, String> topDocs = Util.getTopDocs(reverseMap, relevanceMap, size);
-		
+
 		//Scale the scores between 0 and 1
-		ArrayList<String> valuesList = new ArrayList<String>(topDocs.values());
-		Double largestValue = Double.parseDouble(valuesList.get(0));
-		for (Map.Entry<String, String> entry : topDocs.entrySet()) {
-			Double scaledValue = Double.parseDouble(entry.getValue())/largestValue;
-			topDocs.put(entry.getKey(), String.valueOf(Util.newFormat.format(scaledValue)));
+		if (Util.isValid(topDocs)){
+			ArrayList<String> valuesList = new ArrayList<String>(topDocs.values());
+			if (Util.isValid(valuesList)){
+				Double largestValue = Double.parseDouble(valuesList.get(0));
+				for (Map.Entry<String, String> entry : topDocs.entrySet()) {
+					Double scaledValue = Double.parseDouble(entry.getValue())/largestValue;
+					topDocs.put(entry.getKey(), String.valueOf(Util.newFormat.format(scaledValue)));
+				}
+				return topDocs;
+			}
 		}
-		return topDocs;
+		return null;
 	}
 }

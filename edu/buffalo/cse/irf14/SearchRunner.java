@@ -60,7 +60,7 @@ public class SearchRunner {
 		ArrayList<String> postingList = handler.handleQuery(query);
 		StringBuilder stringBuilder = new StringBuilder();
 
-		if(Util.isValid(postingList)) {
+		if(Util.isValid(postingList) && Util.isValid(handler.getAnalyzedTermList())) {
 			RankingModel ranking;
 			if(ScoringModel.TFIDF == model) {
 				ranking = new TFIDFModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
@@ -177,7 +177,7 @@ public class SearchRunner {
 					ArrayList<String> postingList = handler.handleQuery(query);
 					Map<String, String> results = null;
 					
-					if (Util.isValid(postingList)){
+					if (Util.isValid(postingList) && Util.isValid(handler.getAnalyzedTermList())){
 						RankingModel ranking = new OkapiModel(this.indexDirectory, handler.getAnalyzedTermList(), handler.getDocFrequencyMap(), postingList);
 						results = ranking.evaluatePostings();
 					}
