@@ -27,97 +27,6 @@ public class OkapiModel implements RankingModel{
 		this.docFreqMap = docMap;
 	}
 
-	public Map<String, Map<String, String>> constructTermFreqMap(String[] userQuery, ArrayList<String> postingsArray){
-		Map<String, Map<String, String>> termOccurrence = new TreeMap<String, Map<String, String>>();
-		for (String docID : postingsArray){
-			Map<String, String> idFreqMap = new TreeMap<String, String>();
-			for (String queryTerm : userQuery){
-				String splitString[] = queryTerm.split(":");
-				if (splitString[1].equals("null")){
-					idFreqMap.put(splitString[1], Util.ZERO);
-				}
-				else {
-					IndexType indexType = IndexType.valueOf(splitString[0].toUpperCase());
-					switch (indexType){
-					case TERM: {
-						String normalizedQueryTerm = splitString[1];
-						String capitalizedQueryTerm = normalizedQueryTerm.toUpperCase();
-						String firstCapitalizedTerm = normalizedQueryTerm.substring(0,1).toUpperCase() + normalizedQueryTerm.substring(1);
-						Map<String, Integer> termFreqMap = Util.termOccurrence.get(normalizedQueryTerm);
-						Map<String, Integer> capTermFreqMap = Util.termOccurrence.get(capitalizedQueryTerm);
-						Map<String, Integer> firstLetterUpperMap = Util.termOccurrence.get(firstCapitalizedTerm);
-						String occAsAnalyzedTerm = Util.ZERO;
-						String occAsFullCapsTerm = Util.ZERO;
-						String occAsfirstCharCapTerm = Util.ZERO;
-
-						// Record Occurrences Neatly
-						if (Util.isValid(termFreqMap)){
-							if (Util.isValid(termFreqMap.get(docID)))
-								occAsAnalyzedTerm = termFreqMap.get(docID).toString();
-						}
-						if (Util.isValid(capTermFreqMap)){
-							if (Util.isValid(capTermFreqMap.get(docID)))
-								occAsFullCapsTerm = capTermFreqMap.get(docID).toString();
-						}
-						if (Util.isValid(firstLetterUpperMap)){
-							if (Util.isValid(firstLetterUpperMap.get(docID)))
-								occAsfirstCharCapTerm = firstLetterUpperMap.get(docID).toString();
-						}
-						Integer totalOccurrences = Integer.parseInt(occAsAnalyzedTerm) + Integer.parseInt(occAsFullCapsTerm) + Integer.parseInt(occAsfirstCharCapTerm);
-						if (termFreqMap == null && capTermFreqMap == null && firstLetterUpperMap == null){
-							idFreqMap.put(normalizedQueryTerm, Util.ZERO);
-						}
-						else 
-							idFreqMap.put(normalizedQueryTerm, String.valueOf(totalOccurrences));
-					}
-					break;
-					case AUTHOR: {
-						String authorName = splitString[1];
-						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, authorName.trim());
-						if (Util.isValid(postingsList)){
-							if (postingsList.contains(docID))
-								idFreqMap.put(authorName, Util.ONE);
-							else
-								idFreqMap.put(authorName, Util.ZERO);
-						}
-						else
-							idFreqMap.put(authorName, Util.ZERO);					
-					}
-					break;
-					case CATEGORY: {
-						String categoryName = splitString[1];
-						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, categoryName);
-						if (Util.isValid(postingsList)){
-							if (postingsList.contains(docID))
-								idFreqMap.put(categoryName, Util.ONE);
-							else
-								idFreqMap.put(categoryName, Util.ZERO);
-						}
-						else
-							idFreqMap.put(categoryName, Util.ZERO);
-					}
-					break;
-					case PLACE: {
-						String placeName = splitString[1].toLowerCase();
-						ArrayList<String> postingsList = Util.getPostings(indexDir, indexType, placeName);
-						if (Util.isValid(postingsList)){
-							if (postingsList.contains(docID))
-								idFreqMap.put(splitString[1], Util.ONE);
-							else
-								idFreqMap.put(splitString[1], Util.ZERO);
-						}
-						else
-							idFreqMap.put(splitString[1], Util.ZERO);
-					}
-					break;
-					}
-				}
-			}
-			termOccurrence.put(docID, idFreqMap);
-		}
-		return termOccurrence;
-	}
-
 	public final double weight(double termFrequency, Integer docLength, double docFrequency) {
 		double K = k1 * ((1 - b) + b * docLength / Util.averageDocLength) + termFrequency;
 		return (termFrequency / K)* Math.log((Util.totalDocuments - docFrequency + 0.5d) / (docFrequency + 0.5d));
@@ -134,7 +43,7 @@ public class OkapiModel implements RankingModel{
 		String[] queryArray = userQuery.toArray(new String[userQuery.size()]);
 
 		// Construct the TF-IDF Mesh
-		Map<String, Map<String, String>> termOccurrence = constructTermFreqMap(queryArray, postings);
+		Map<String, Map<String, String>> termOccurrence = Util.constructTermFreqMap(indexDir, queryArray, postings);
 		Map<String, String> relevanceMap = new TreeMap<String, String>();
 
 		// Construct a map with query term as key and its occurrence in query as value

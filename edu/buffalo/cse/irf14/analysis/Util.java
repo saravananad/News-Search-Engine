@@ -21,7 +21,7 @@ public class Util {
 	public static final String dictionaryDelimiter = ":";
 	public static final String occurenceDelimiter = ";";
 	public static final String invidualDoc_OccurDelimiter = "=";
-	
+
 	public static final String authorIndexFile = "AuthorIndex.txt";
 	public static final String termIndexFile = "TermIndex.txt";
 	public static final String categoryIndexFile = "CategoryIndex.txt";
@@ -29,16 +29,16 @@ public class Util {
 	public static final String docDictionaryFile = "DocDictionary.txt";
 	public static final String docSizeFIle = "docSize.txt";
 	public static final String termOccurenceFile = "TermOccurence.txt";
-	
+
 	public static DecimalFormat newFormat = new DecimalFormat("#.#####");
 	public static String ZERO = "0";
 	public static String ONE = "1";
 	public static Integer totalDocuments = 0;
 	public static Double averageDocLength = 0.0;
-	
+
 	public static Map<String, String> documentIDMap = new HashMap<String, String>();
 	public static Map<String, Map<String, Integer>> termOccurrence = new TreeMap<String, Map<String, Integer>>();
-	
+
 	public enum FilterList {
 		STOPWORD(StopWordFilter.class.getName()),
 		CAPITALIZATION(CapitalizationRule.class.getName()),
@@ -64,7 +64,7 @@ public class Util {
 	public static boolean isValidString(String value) {
 		return value != null && !"".equals(value.trim());
 	}
-	
+
 	public static boolean isValid(Object value) {
 		return value != null && !"null".equals(value);
 	}
@@ -78,7 +78,7 @@ public class Util {
 	}
 
 	public static long getDocID(String docName) {
-		if(Util.isValidString(docName)) {
+		if(isValidString(docName)) {
 			Long docIDInMap = docIDMapping.get(docName);
 			if(docIDInMap == null) {
 				docIDMapping.put(docName, ++docID);
@@ -178,14 +178,14 @@ public class Util {
 			operPriorityMap.put(NOT_CLOSE, NOT_PRIORITY);
 		}
 	}
-	
+
 	/********************************* Build Term Occurrences Map *************************************/
-	
+
 	public static void initDocOccurrencesMap(String indexDirName){
 		try {
 
 			/* Create a document dictionary*/
-			BufferedReader dictionaryReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + Util.docDictionaryFile)));
+			BufferedReader dictionaryReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + docDictionaryFile)));
 			String line = dictionaryReader.readLine();
 			while ((line)!= null){
 				String[] docIDPair = line.split(":");
@@ -195,15 +195,15 @@ public class Util {
 			dictionaryReader.close();
 
 			/* Create a term occurrence dictionary */
-			BufferedReader occurenceReader = new BufferedReader(new FileReader(new File (indexDirName + File.separator + Util.termOccurenceFile)));
+			BufferedReader occurenceReader = new BufferedReader(new FileReader(new File (indexDirName + File.separator + termOccurenceFile)));
 			String occurenceLine = occurenceReader.readLine();
 			while (occurenceLine != null){
 				Map<String, Integer> innerMap = new HashMap<String, Integer>();
-				String[] eachLine = occurenceLine.split(Util.dictionaryDelimiter);
+				String[] eachLine = occurenceLine.split(dictionaryDelimiter);
 				String tokenText = eachLine[0];
-				String[] docIdOccurenceArray = eachLine[1].split(Util.occurenceDelimiter);
+				String[] docIdOccurenceArray = eachLine[1].split(occurenceDelimiter);
 				for (String occurence : docIdOccurenceArray){
-					String[] docIdOccurence = occurence.split(Util.invidualDoc_OccurDelimiter);
+					String[] docIdOccurence = occurence.split(invidualDoc_OccurDelimiter);
 					innerMap.put(documentIDMap.get(docIdOccurence[0]), Integer.parseInt(docIdOccurence[1]));
 				}
 				termOccurrence.put(tokenText, innerMap); // Mapping of Token : Doc ID - Occurrence in each document 
@@ -215,7 +215,7 @@ public class Util {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void calcAvgDocLength(){
 		Integer sumOfAllLengths = 0;
 		for (Integer length : docSizeMap.values()){
@@ -223,7 +223,7 @@ public class Util {
 		}
 		averageDocLength = (double) (sumOfAllLengths / totalDocuments);
 	}
-	
+
 	public static Map<String, String> getTopDocs(Map<String, String> reverseMap, Map<String, String> relevanceMap, int size){
 		Map<String, String> topDocsMap = new LinkedHashMap<String, String>();
 		for (Map.Entry<String, String> entry : reverseMap.entrySet()) {
@@ -234,12 +234,12 @@ public class Util {
 		}
 		return topDocsMap;
 	}
-	
+
 	private static void initMaps(String indexDirName, String fileName, Map<String, ArrayList<String>> mapType){
-		
+
 		try {
 			if (documentIDMap.isEmpty() || termOccurrence.isEmpty()){
-				Util.initDocOccurrencesMap(indexDirName);
+				initDocOccurrencesMap(indexDirName);
 			}
 			if(docSizeMap.isEmpty()) {
 				initDocumentSizeMap(indexDirName);
@@ -253,7 +253,7 @@ public class Util {
 				ArrayList<String> postingsList = new ArrayList<String>();
 				String[] postings = eachPostingPair[1].split(",");
 				for (String docID : postings){
-					postingsList.add(Util.documentIDMap.get(docID));
+					postingsList.add(documentIDMap.get(docID));
 				}
 				mapType.put(eachPostingPair[0], postingsList);
 				eachLine = indexReader.readLine();
@@ -263,10 +263,10 @@ public class Util {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private static void initDocumentSizeMap(String indexDirName) {
 		try {
-			BufferedReader dictionaryReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + Util.docSizeFIle)));
+			BufferedReader dictionaryReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + docSizeFIle)));
 			String line = null;
 			while ((line = dictionaryReader.readLine())!= null){
 				String[] docIDPair = line.split(dictionaryDelimiter);
@@ -277,86 +277,177 @@ public class Util {
 			System.err.println(ex);
 		}
 	}
-	
+
+	public static Map<String, Map<String, String>> constructTermFreqMap(String indexDir, String[] userQuery, ArrayList<String> postingsArray){
+		Map<String, Map<String, String>> termOccurrence = new TreeMap<String, Map<String, String>>();
+		for (String docID : postingsArray){
+			Map<String, String> idFreqMap = new TreeMap<String, String>();
+			for (String queryTerm : userQuery){
+				String splitString[] = queryTerm.split(":");
+				if ("null".equals(splitString[1])){
+					idFreqMap.put(splitString[1], ZERO);
+				} else {
+					IndexType indexType = IndexType.valueOf(splitString[0].toUpperCase());
+					switch (indexType){
+					case TERM: {
+						String normalizedQueryTerm = splitString[1];
+						String capitalizedQueryTerm = normalizedQueryTerm.toUpperCase();
+						String firstCapitalizedTerm = normalizedQueryTerm.substring(0,1).toUpperCase() + normalizedQueryTerm.substring(1);
+						Map<String, Integer> termFreqMap = Util.termOccurrence.get(normalizedQueryTerm);
+						Map<String, Integer> capTermFreqMap = Util.termOccurrence.get(capitalizedQueryTerm);
+						Map<String, Integer> firstLetterUpperMap = Util.termOccurrence.get(firstCapitalizedTerm);
+						String occAsAnalyzedTerm = ZERO;
+						String occAsFullCapsTerm = ZERO;
+						String occAsfirstCharCapTerm = ZERO;
+
+						// Record Occurrences Neatly
+						if (isValid(termFreqMap) && isValid(termFreqMap.get(docID))){
+							occAsAnalyzedTerm = termFreqMap.get(docID).toString();
+						}
+						if (isValid(capTermFreqMap) && isValid(capTermFreqMap.get(docID))){
+							occAsFullCapsTerm = capTermFreqMap.get(docID).toString();
+						}
+						if (isValid(firstLetterUpperMap) && isValid(firstLetterUpperMap.get(docID))){
+							occAsfirstCharCapTerm = firstLetterUpperMap.get(docID).toString();
+						}
+
+						Integer totalOccurrences = Integer.parseInt(occAsAnalyzedTerm) + Integer.parseInt(occAsFullCapsTerm) + Integer.parseInt(occAsfirstCharCapTerm);
+						if (termFreqMap == null && capTermFreqMap == null && firstLetterUpperMap == null){
+							idFreqMap.put(normalizedQueryTerm, ZERO);
+						} else {
+							idFreqMap.put(normalizedQueryTerm, String.valueOf(totalOccurrences));
+						}
+					}
+					break;
+					case AUTHOR: {
+						String authorName = splitString[1];
+						ArrayList<String> postingsList = getPostings(indexDir, indexType, authorName.trim());
+						if (isValid(postingsList)){
+							if (postingsList.contains(docID)) {
+								idFreqMap.put(authorName, ONE);
+							} else {
+								idFreqMap.put(authorName, ZERO);
+							}
+						} else {
+							idFreqMap.put(authorName, ZERO);					
+						}
+					}
+					break;
+					case CATEGORY: {
+						String categoryName = splitString[1];
+						ArrayList<String> postingsList = getPostings(indexDir, indexType, categoryName);
+						if (isValid(postingsList)){
+							if (postingsList.contains(docID)) {
+								idFreqMap.put(categoryName, ONE);
+							} else {
+								idFreqMap.put(categoryName, ZERO);
+							}
+						} else {
+							idFreqMap.put(categoryName, ZERO);
+						}
+					}
+					break;
+					case PLACE: {
+						String placeName = splitString[1].toLowerCase();
+						ArrayList<String> postingsList = getPostings(indexDir, indexType, placeName);
+						if (isValid(postingsList)){
+							if (postingsList.contains(docID)) {
+								idFreqMap.put(splitString[1], ONE);
+							} else {
+								idFreqMap.put(splitString[1], ZERO);
+							}
+						} else {
+							idFreqMap.put(splitString[1], ZERO);
+						}
+					}
+					break;
+					}
+				}
+			}
+			termOccurrence.put(docID, idFreqMap);
+		}
+		return termOccurrence;
+	}
+
 	public static ArrayList<String> getPostings(String indexDirName, IndexType indexType, String term){
 		switch (indexType) {
 		case  AUTHOR:{
 			if (authorMapping.isEmpty()){
-				initMaps(indexDirName,Util.authorIndexFile, authorMapping);
+				initMaps(indexDirName, authorIndexFile, authorMapping);
 			}
-ArrayList<String> queryList = authorMapping.get(term);
-			
+			ArrayList<String> queryList = authorMapping.get(term);
+
 			String firstCapitalized = term.substring(0,1).toUpperCase() + term.substring(1);
 			ArrayList<String> firstCaptitalList = authorMapping.get(firstCapitalized);
-			if(Util.isValid(firstCaptitalList)) {
+			if(isValid(firstCaptitalList)) {
 				queryList = QueryHandler.performOR(queryList, firstCaptitalList);
 			}
-			
+
 			String fullCap = term.toUpperCase();
 			ArrayList<String> fullCapList = authorMapping.get(fullCap);
-			if(Util.isValid(fullCapList)) {
+			if(isValid(fullCapList)) {
 				queryList = QueryHandler.performOR(queryList, fullCapList);
 			}
-			
+
 			String fulllowercase = term.toLowerCase();
 			ArrayList<String> fullLowList = authorMapping.get(fulllowercase);
-			if(Util.isValid(fullLowList)) {
+			if(isValid(fullLowList)) {
 				queryList = QueryHandler.performOR(queryList, fullLowList);
 			}
-			
+
 			return queryList;
 		}
 
 		case TERM: {
 			if (termMapping.isEmpty()){
-				initMaps(indexDirName,Util.termIndexFile, termMapping);
+				initMaps(indexDirName, termIndexFile, termMapping);
 			}
 			ArrayList<String> queryList = termMapping.get(term);
-			
+
 			String firstCapitalized = term.substring(0,1).toUpperCase() + term.substring(1);
 			ArrayList<String> firstCaptitalList = termMapping.get(firstCapitalized);
-			if(Util.isValid(firstCaptitalList)) {
+			if(isValid(firstCaptitalList)) {
 				queryList = QueryHandler.performOR(queryList, firstCaptitalList);
 			}
-			
+
 			String fullCap = term.toUpperCase();
 			ArrayList<String> fullCapList = termMapping.get(fullCap);
-			if(Util.isValid(fullCapList)) {
+			if(isValid(fullCapList)) {
 				queryList = QueryHandler.performOR(queryList, fullCapList);
 			}
-			
+
 			return queryList;
 		}
 
 		case PLACE: {
 			if (placeMapping.isEmpty()){
-				initMaps(indexDirName,Util.placeIndexFile, placeMapping);
+				initMaps(indexDirName, placeIndexFile, placeMapping);
 			}
 			ArrayList<String> queryList = placeMapping.get(term);
-			
+
 			String firstCapitalized = term.substring(0,1).toUpperCase() + term.substring(1);
 			ArrayList<String> firstCaptitalList = placeMapping.get(firstCapitalized);
-			if(Util.isValid(firstCaptitalList)) {
+			if(isValid(firstCaptitalList)) {
 				queryList = QueryHandler.performOR(queryList, firstCaptitalList);
 			}
-			
+
 			String fullCap = term.toUpperCase();
 			ArrayList<String> fullCapList = placeMapping.get(fullCap);
-			if(Util.isValid(fullCapList)) {
+			if(isValid(fullCapList)) {
 				queryList = QueryHandler.performOR(queryList, fullCapList);
 			}
 			String fulllowercase = term.toLowerCase();
 			ArrayList<String> fullLowList = placeMapping.get(fulllowercase);
-			if(Util.isValid(fullLowList)) {
+			if(isValid(fullLowList)) {
 				queryList = QueryHandler.performOR(queryList, fullLowList);
 			}
-			
+
 			return queryList;
 		}
 
 		case CATEGORY: {
 			if (categoryMapping.isEmpty()){
-				initMaps(indexDirName,Util.categoryIndexFile, categoryMapping);
+				initMaps(indexDirName,categoryIndexFile, categoryMapping);
 			}
 			ArrayList<String> postingsList = categoryMapping.get(term);
 			return postingsList;
