@@ -8,18 +8,18 @@ import java.util.Set;
 import java.util.TreeMap;
 
 import edu.buffalo.cse.irf14.analysis.Util;
-import edu.buffalo.cse.irf14.index.IndexType;
 
 public class OkapiModel implements RankingModel{
 
-	private double k1 = 1.2d;
-	private double k3 = 1.8d;
-	private double b = 0.75d;
-	String indexDir;
-	ArrayList<String> userQuery;
-	ArrayList<String> postings;
-	Map<String, String> docFreqMap;
-
+	private static final double k1 = 1.2d;
+	private static final double k3 = 1.8d;
+	private static final double b = 0.75d;
+	
+	String indexDir = null;
+	ArrayList<String> userQuery = new ArrayList<String>();
+	ArrayList<String> postings = new ArrayList<String>();
+	Map<String, String> docFreqMap = new TreeMap<String, String>();
+	
 	public OkapiModel(String indexDir, ArrayList<String> query, Map<String, String> docMap, ArrayList<String> postingsList) {
 		this.indexDir = indexDir;
 		this.userQuery = query;

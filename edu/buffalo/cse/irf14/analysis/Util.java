@@ -248,14 +248,16 @@ public class Util {
 			calcAvgDocLength();
 			BufferedReader indexReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + fileName)));		
 			String eachLine = indexReader.readLine();
-			while (eachLine != null){
+			while (Util.isValid(eachLine)){
 				String[] eachPostingPair = eachLine.split(":");
 				ArrayList<String> postingsList = new ArrayList<String>();
 				String[] postings = eachPostingPair[1].split(",");
-				for (String docID : postings){
-					postingsList.add(documentIDMap.get(docID));
+				if(postings != null) {
+					for (String docID : postings){
+						postingsList.add(documentIDMap.get(docID));
+					}
+					mapType.put(eachPostingPair[0], postingsList);
 				}
-				mapType.put(eachPostingPair[0], postingsList);
 				eachLine = indexReader.readLine();
 			}
 			indexReader.close();
@@ -279,7 +281,7 @@ public class Util {
 	}
 
 	public static Map<String, Map<String, String>> constructTermFreqMap(String indexDir, String[] userQuery, ArrayList<String> postingsArray){
-		Map<String, Map<String, String>> termOccurrence = new TreeMap<String, Map<String, String>>();
+		Map<String, Map<String, String>> termOccMap = new TreeMap<String, Map<String, String>>();
 		for (String docID : postingsArray){
 			Map<String, String> idFreqMap = new TreeMap<String, String>();
 			for (String queryTerm : userQuery){
@@ -293,9 +295,9 @@ public class Util {
 						String normalizedQueryTerm = splitString[1];
 						String capitalizedQueryTerm = normalizedQueryTerm.toUpperCase();
 						String firstCapitalizedTerm = normalizedQueryTerm.substring(0,1).toUpperCase() + normalizedQueryTerm.substring(1);
-						Map<String, Integer> termFreqMap = Util.termOccurrence.get(normalizedQueryTerm);
-						Map<String, Integer> capTermFreqMap = Util.termOccurrence.get(capitalizedQueryTerm);
-						Map<String, Integer> firstLetterUpperMap = Util.termOccurrence.get(firstCapitalizedTerm);
+						Map<String, Integer> termFreqMap = termOccurrence.get(normalizedQueryTerm);
+						Map<String, Integer> capTermFreqMap = termOccurrence.get(capitalizedQueryTerm);
+						Map<String, Integer> firstLetterUpperMap = termOccurrence.get(firstCapitalizedTerm);
 						String occAsAnalyzedTerm = ZERO;
 						String occAsFullCapsTerm = ZERO;
 						String occAsfirstCharCapTerm = ZERO;
@@ -364,9 +366,9 @@ public class Util {
 					}
 				}
 			}
-			termOccurrence.put(docID, idFreqMap);
+			termOccMap.put(docID, idFreqMap);
 		}
-		return termOccurrence;
+		return termOccMap;
 	}
 
 	public static ArrayList<String> getPostings(String indexDirName, IndexType indexType, String term){

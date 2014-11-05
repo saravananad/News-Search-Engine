@@ -9,15 +9,14 @@ import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import edu.buffalo.cse.irf14.analysis.Util;
-import edu.buffalo.cse.irf14.index.IndexType;
 
 public class TFIDFModel implements RankingModel {
 
-	String indexDir;
-	ArrayList<String> userQuery;
-	ArrayList<String> postings;
-	Map<String, String> docFreqMap;
-
+	String indexDir = null;
+	ArrayList<String> userQuery = new ArrayList<String>();
+	ArrayList<String> postings = new ArrayList<String>();
+	Map<String, String> docFreqMap = new TreeMap<String, String>();
+	
 	public TFIDFModel(String indexDirectory, ArrayList<String> query, Map<String, String> docMap, ArrayList<String> postingsList) {
 		this.indexDir = indexDirectory;
 		this.userQuery = query;
