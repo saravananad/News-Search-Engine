@@ -236,7 +236,6 @@ public class Util {
 	}
 
 	private static void initMaps(String indexDirName, String fileName, Map<String, ArrayList<String>> mapType){
-
 		try {
 			if (documentIDMap.isEmpty() || termOccurrence.isEmpty()){
 				initDocOccurrencesMap(indexDirName);
@@ -457,5 +456,4 @@ public class Util {
 		}
 		return null;
 	}
-
 }

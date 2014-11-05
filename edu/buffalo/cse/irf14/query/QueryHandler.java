@@ -31,6 +31,7 @@ public class QueryHandler {
 		this.indexDir = indexDir;
 	}
 
+	@SuppressWarnings("unchecked")
 	public ArrayList<String> handleQuery(Query query) {
 		constructStack(query);
 		Object postingsObj = operandStack.peek();
@@ -41,6 +42,7 @@ public class QueryHandler {
 		return postingsList;
 	}
 
+	@SuppressWarnings("unchecked")
 	private void constructStack(Query query) {
 		List<String> searchQuery = query.getSearchQuery();
 		int i = 0;
