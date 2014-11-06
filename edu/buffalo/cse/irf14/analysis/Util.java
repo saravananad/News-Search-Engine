@@ -531,10 +531,6 @@ public class Util {
 							if((term.startsWith("*") && term.endsWith("*")) || (term.startsWith("?") && term.endsWith("?"))) {
 								term = term.replaceAll("\\*|\\?", "");
 								for(String rawTerm : rawTermList) {
-									if(queryTerms != null && queryTerms.size() >= 5) {
-										break;
-									}
-									
 									if(rawTerm.contains(term) && !rawTerm.startsWith(term) && !rawTerm.endsWith(term)) {
 										if(isQuestionMarkQuery && (rawTerm.length() != term.length() + 2)) {
 											continue;
@@ -550,10 +546,6 @@ public class Util {
 							} else if(term.startsWith("*") || term.startsWith("?")) {
 								term = term.replaceAll("\\*|\\?", "");
 								for(String rawTerm : rawTermList) {
-									if(queryTerms != null && queryTerms.size() >= 5) {
-										break;
-									}
-									
 									if(rawTerm.endsWith(term)) {
 										if(isQuestionMarkQuery && (rawTerm.length() != term.length() + 1)) {
 											continue;
@@ -565,14 +557,9 @@ public class Util {
 										queryTerms.add(addingTerm);
 									}
 								}
-							} else {
+							} else if(term.endsWith("*") || term.endsWith("?")) {
 								term = term.replaceAll("\\*|\\?", "");
 								for(String rawTerm : rawTermList) {
-									if(queryTerms != null && queryTerms.size() >= 5) {
-										break;
-									}
-									
-									
 									if(rawTerm.startsWith(term)) {
 										if(isQuestionMarkQuery && (rawTerm.length() != term.length() + 1)) {
 											continue;
@@ -582,6 +569,24 @@ public class Util {
 											addingTerm = indexType + ":" + rawTerm;
 										}
 										queryTerms.add(addingTerm);
+									}
+								}
+							} else {
+								String[] termSplit = term.split("\\*|\\?");
+								if(termSplit.length == 2) {
+									term = term.replaceAll("\\*|\\?", "");
+									for(String rawTerm : rawTermList) {
+										if(rawTerm.startsWith(termSplit[0]) && rawTerm.endsWith(termSplit[1]) && rawTerm.length() > term.length()) {
+											if(isQuestionMarkQuery && (rawTerm.length() != term.length() + 1)) {
+												continue;
+											}
+											
+											String addingTerm = rawTerm;
+											if(isValid(indexType)) {
+												addingTerm = indexType + ":" + rawTerm;
+											}
+											queryTerms.add(addingTerm);
+										}
 									}
 								}
 							}
