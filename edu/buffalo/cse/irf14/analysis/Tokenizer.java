@@ -56,7 +56,7 @@ public class Tokenizer {
 					Token token = new Token(currentTokenString);
 					
 					if(addRawTerms) {
-						currentTokenString = currentTokenString.replaceAll("\\-|\\(|\\)|\\<|\\>|\\-|\\_|[0-9]", "");
+						currentTokenString = currentTokenString.replaceAll("\\-|\\(|\\)|\\<|\\>|\\-|\\_|[0-9]|&|#|!|;|:", "");
 						if(Util.isValidString(currentTokenString)) {
 							Util.addTermToRawTermIndex(currentTokenString.toLowerCase());
 						}
