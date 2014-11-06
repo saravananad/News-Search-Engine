@@ -34,11 +34,13 @@ public class QueryHandler {
 	@SuppressWarnings("unchecked")
 	public ArrayList<String> handleQuery(Query query) {
 		constructStack(query);
-		Object postingsObj = operandStack.peek();
 		ArrayList<String> postingsList = null;
-		if (Util.isValid(postingsObj)){
-			postingsList = (ArrayList<String>) postingsObj;
-		}
+		if (operandStack != null && !operandStack.isEmpty()){
+			Object postingsObj = operandStack.peek();
+			if (Util.isValid(postingsObj)){
+				postingsList = (ArrayList<String>) postingsObj;
+			}
+		}	
 		return postingsList;
 	}
 
@@ -218,9 +220,9 @@ public class QueryHandler {
 
 	public ArrayList<String> doOperation(String oper, ArrayList<String> postings1, ArrayList<String> postings2, boolean isFirstOperatorNot) {
 		ArrayList<String> result = new ArrayList<String>();
-		if(Util.AND.equals(oper.trim())) {
+		if(Util.AND.equals(oper)) {
 			result = performAND(postings1, postings2);
-		} else if(Util.OR.equals(oper.trim())) {
+		} else if(Util.OR.equals(oper)) {
 			result = performOR(postings1, postings2);
 		} else {
 			result = performNOT(postings1, postings2, isFirstOperatorNot);

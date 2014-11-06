@@ -188,7 +188,7 @@ public class SearchRunner {
 								List<String> list = queryTerms.get(term);
 								if(list != null && !list.isEmpty()) {
 									String query = list.toString().trim().replace("[", "(").replace("]", ")").replace(", ", " " + Util.OR + " ");
-									finalQuery += query;
+									finalQuery += " " + query;
 								} else {
 									finalQuery += " " + term;
 								}

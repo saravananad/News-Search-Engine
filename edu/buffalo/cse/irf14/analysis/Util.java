@@ -481,13 +481,15 @@ public class Util {
 			if(rawTermList.isEmpty()) {
 				indexReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + rawTermIndexFile)));
 				String line = indexReader.readLine();
-				String[] split = line.split(",");
-				if(split != null) {
-					for(String term : split) {
-						if(!rawTermList.contains(term)) {
-							rawTermList.add(term);
+				if (line != null && !line.isEmpty()){
+					String[] split = line.split(",");
+					if(split != null) {
+						for(String term : split) {
+							if(!rawTermList.contains(term)) {
+								rawTermList.add(term);
+							}
 						}
-					}
+					}					
 				}
 			}
 		} catch (Exception e) {
