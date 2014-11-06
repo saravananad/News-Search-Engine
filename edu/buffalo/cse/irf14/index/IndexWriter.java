@@ -44,8 +44,8 @@ public class IndexWriter {
 	private static Map<String, List<Long>> placeIndex = new TreeMap<String, List<Long>>();
 	private static Map<Long, Long> docIDSizeMap = new HashMap<Long, Long>();
 	private static Map<String, Map<Long,Long>> termOccurrence = new TreeMap<String, Map<Long,Long>>();
-
-	private Tokenizer tokenizer = new Tokenizer();
+	
+	private Tokenizer tokenizer = new Tokenizer(true);
 	private Tokenizer author_tokenizer = new Tokenizer("\\s+[a|A][n|N][d|D]\\s+");
 	private Tokenizer place_tokenizer = new Tokenizer(",");
 
@@ -394,7 +394,17 @@ public class IndexWriter {
 				}
 				writer.close();
 			}
-
+			
+			List<String> rawTermIndex = Util.getRawTermIndex();
+			if(rawTermIndex != null && !rawTermIndex.isEmpty()) {
+				File docIDSizeFile = new File(indexWriteDir + File.separator + Util.rawTermIndexFile);
+				docIDSizeFile.getParentFile().mkdir();
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(docIDSizeFile)));
+				String finalTerms = rawTermIndex.toString();
+				finalTerms = finalTerms.substring(1, finalTerms.lastIndexOf("]")).replace(", ", ",");
+				writer.write(finalTerms);
+				writer.close();
+			}
 		} catch (IOException e) {
 			System.err.println(e);
 		}

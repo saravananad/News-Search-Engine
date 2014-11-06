@@ -3,10 +3,13 @@ package edu.buffalo.cse.irf14.analysis;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -29,6 +32,7 @@ public class Util {
 	public static final String docDictionaryFile = "DocDictionary.txt";
 	public static final String docSizeFIle = "docSize.txt";
 	public static final String termOccurenceFile = "TermOccurence.txt";
+	public static final String rawTermIndexFile = "rawTerms.txt";
 
 	public static DecimalFormat newFormat = new DecimalFormat("#.#####");
 	public static String ZERO = "0";
@@ -37,6 +41,7 @@ public class Util {
 	public static Double averageDocLength = 0.0;
 
 	public static Map<String, String> documentIDMap = new HashMap<String, String>();
+	public static List<String> rawTermList = new LinkedList<String>();
 	public static Map<String, Map<String, Integer>> termOccurrence = new TreeMap<String, Map<String, Integer>>();
 
 	public enum FilterList {
@@ -458,5 +463,140 @@ public class Util {
 		}
 		}
 		return null;
+	}
+	
+	public static void addTermToRawTermIndex(String term) {
+		if(!rawTermList.contains(term)) {
+			rawTermList.add(term);
+		}
+	}
+	
+	public static List<String> getRawTermIndex() {
+		return rawTermList;
+	}
+	
+	public static void initRawTerms(String indexDirName) {
+		BufferedReader indexReader = null;
+		try {
+			if(rawTermList.isEmpty()) {
+				indexReader = new BufferedReader(new FileReader(new File(indexDirName + File.separator + rawTermIndexFile)));
+				String line = indexReader.readLine();
+				String[] split = line.split(",");
+				if(split != null) {
+					for(String term : split) {
+						if(!rawTermList.contains(term)) {
+							rawTermList.add(term);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			System.err.println(e);
+		} finally {
+			try {
+				indexReader.close();
+			} catch (IOException e) {
+				System.err.println(e);
+			}
+		}
+	}
+	
+	public static Map<String, List<String>> getWildCardTerms(String indexDirName, String terms) {
+		if(terms != null) {
+			Map<String,List<String>> finalTerms = new HashMap<String, List<String>>();
+			String[] split = terms.split(" ");
+			if(split != null) {
+				for(String term : split) {
+					String indexType = null;
+					String[] querySplit = term.split(":");
+					if(querySplit.length == 2) {
+						indexType = querySplit[0];
+						term = term.split(":")[1];
+					}
+					
+					List<String> queryTerms = new LinkedList<String>();
+					if(isWildCardTerm(term)) {
+						if(rawTermList.isEmpty()) {
+							initRawTerms(indexDirName);
+						}
+						
+						boolean isQuestionMarkQuery = false;
+						if(term.contains("?")) {
+							isQuestionMarkQuery = true;
+						}
+						
+						if(!rawTermList.isEmpty()) {
+							if((term.startsWith("*") && term.endsWith("*")) || (term.startsWith("?") && term.endsWith("?"))) {
+								term = term.replaceAll("\\*|\\?", "");
+								for(String rawTerm : rawTermList) {
+									if(queryTerms != null && queryTerms.size() >= 5) {
+										break;
+									}
+									
+									if(rawTerm.contains(term) && !rawTerm.startsWith(term) && !rawTerm.endsWith(term)) {
+										if(isQuestionMarkQuery && (rawTerm.length() != term.length() + 2)) {
+											continue;
+										}
+										
+										String addingTerm = rawTerm;
+										if(isValid(indexType)) {
+											addingTerm = indexType + ":" + rawTerm;
+										}
+										queryTerms.add(addingTerm);
+									}
+								}
+							} else if(term.startsWith("*") || term.startsWith("?")) {
+								term = term.replaceAll("\\*|\\?", "");
+								for(String rawTerm : rawTermList) {
+									if(queryTerms != null && queryTerms.size() >= 5) {
+										break;
+									}
+									
+									if(rawTerm.endsWith(term)) {
+										if(isQuestionMarkQuery && (rawTerm.length() != term.length() + 1)) {
+											continue;
+										}
+										String addingTerm = rawTerm;
+										if(isValid(indexType)) {
+											addingTerm = indexType + ":" + rawTerm;
+										}
+										queryTerms.add(addingTerm);
+									}
+								}
+							} else {
+								term = term.replaceAll("\\*|\\?", "");
+								for(String rawTerm : rawTermList) {
+									if(queryTerms != null && queryTerms.size() >= 5) {
+										break;
+									}
+									
+									
+									if(rawTerm.startsWith(term)) {
+										if(isQuestionMarkQuery && (rawTerm.length() != term.length() + 1)) {
+											continue;
+										}
+										String addingTerm = rawTerm;
+										if(isValid(indexType)) {
+											addingTerm = indexType + ":" + rawTerm;
+										}
+										queryTerms.add(addingTerm);
+									}
+								}
+							}
+						}
+						finalTerms.put(term, queryTerms);
+					}
+				}
+				return finalTerms;
+			}
+		}
+		return null;
+	}
+	
+	public static boolean isWildCardTerm(String term) {
+		if(Util.isValidString(term) && (term.contains("*") || term.contains("?"))) {
+			return true;
+		}
+		return false;
 	}
 }

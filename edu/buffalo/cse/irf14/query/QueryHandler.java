@@ -218,9 +218,9 @@ public class QueryHandler {
 
 	public ArrayList<String> doOperation(String oper, ArrayList<String> postings1, ArrayList<String> postings2, boolean isFirstOperatorNot) {
 		ArrayList<String> result = new ArrayList<String>();
-		if(Util.AND.equals(oper)) {
+		if(Util.AND.equals(oper.trim())) {
 			result = performAND(postings1, postings2);
-		} else if(Util.OR.equals(oper)) {
+		} else if(Util.OR.equals(oper.trim())) {
 			result = performOR(postings1, postings2);
 		} else {
 			result = performNOT(postings1, postings2, isFirstOperatorNot);

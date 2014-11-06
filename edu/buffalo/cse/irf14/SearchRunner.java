@@ -32,7 +32,8 @@ public class SearchRunner {
 	public String corpusDirectory = null;
 	public char mode = ' ';
 	PrintStream stream = null;
-
+	private String userQuery = null;
+	
 	/**
 	 * Default (and only public) constuctor
 	 * @param indexDir : The directory where the index resides
@@ -172,6 +173,30 @@ public class SearchRunner {
 				String[] split = line.split(":", 2);
 				if(split.length == 2) {
 					String queryString = split[1].replaceAll("\\{|\\}", "").trim();
+					this.userQuery = queryString;
+					if(wildcardSupported() && Util.isWildCardTerm(queryString)) {
+						Map<String, List<String>> queryTerms = getQueryTerms();
+						String[] termSplit = queryString.split(" ");
+						if(termSplit != null && queryTerms != null) {
+							String finalQuery = "";
+							for(String term : termSplit) {
+								term = term.replaceAll("\\*|\\?", "");
+								if(term.split(":").length == 2) {
+									term = term.split(":")[1];
+								}
+								
+								List<String> list = queryTerms.get(term);
+								if(list != null && !list.isEmpty()) {
+									String query = list.toString().trim().replace("[", "(").replace("]", ")").replace(", ", " " + Util.OR + " ");
+									finalQuery += query;
+								} else {
+									finalQuery += " " + term;
+								}
+							}
+							queryString = finalQuery.trim();
+						}
+					}
+					
 					Query query = QueryParser.parse(queryString, Util.getDefaultBooleanOperator());
 					QueryHandler handler = new QueryHandler(indexDirectory, query);
 					ArrayList<String> postingList = handler.handleQuery(query);
@@ -221,8 +246,7 @@ public class SearchRunner {
 	 * @return true if supported, false otherwise
 	 */
 	public static boolean wildcardSupported() {
-		//TODO: CHANGE THIS TO TRUE ONLY IF WILDCARD BONUS ATTEMPTED
-		return false;
+		return true;
 	}
 
 	/**
@@ -231,9 +255,7 @@ public class SearchRunner {
 	 * possible expansions as values if exist, null otherwise
 	 */
 	public Map<String, List<String>> getQueryTerms() {
-		//TODO:IMPLEMENT THIS METHOD IFF WILDCARD BONUS ATTEMPTED
-		return null;
-
+		return Util.getWildCardTerms(this.indexDirectory,this.userQuery);
 	}
 
 	/**
