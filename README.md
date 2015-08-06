@@ -1,5 +1,4 @@
-News Search Engine
-===========
+#News Search Engine
 
 ###About
 This project tries to index and query the RCV-1 corpus and mimics the functionality of a search engine. This project runs in 2 phases.
