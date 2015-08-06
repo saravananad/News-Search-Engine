@@ -11,9 +11,13 @@ public class Tokenizer {
 	/**
 	 * Default constructor. Assumes tokens are whitespace delimited
 	 */
-	private String delimiter;
-	public Tokenizer() {
-		this.delimiter = " ";
+	private String delimiter = " ";
+	private boolean addRawTerms = false;
+	
+	public Tokenizer() { }
+	
+	public Tokenizer(boolean addRawTerms) {
+		this.addRawTerms = addRawTerms;
 	}
 
 	/**
@@ -50,6 +54,13 @@ public class Tokenizer {
 				if(Util.isValidString(currentTokenString)) {
 					currentTokenString = currentTokenString.trim();
 					Token token = new Token(currentTokenString);
+					
+					if(addRawTerms) {
+						currentTokenString = currentTokenString.replaceAll("\\-|\\(|\\)|\\<|\\>|\\-|\\_|[0-9]|&|#|!|;|:|\"|\'|\\.|/", "");
+						if(Util.isValidString(currentTokenString)) {
+							Util.addTermToRawTermIndex(currentTokenString.toLowerCase());
+						}
+					}
 					tokenStream.add(token);
 				}
 			}

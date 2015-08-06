@@ -8,6 +8,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -40,9 +42,10 @@ public class IndexWriter {
 	private static Map<String, List<Long>> authorIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, List<Long>> categoryIndex = new TreeMap<String, List<Long>>();
 	private static Map<String, List<Long>> placeIndex = new TreeMap<String, List<Long>>();
+	private static Map<Long, Long> docIDSizeMap = new HashMap<Long, Long>();
 	private static Map<String, Map<Long,Long>> termOccurrence = new TreeMap<String, Map<Long,Long>>();
-
-	private Tokenizer tokenizer = new Tokenizer();
+	
+	private Tokenizer tokenizer = new Tokenizer(true);
 	private Tokenizer author_tokenizer = new Tokenizer("\\s+[a|A][n|N][d|D]\\s+");
 	private Tokenizer place_tokenizer = new Tokenizer(",");
 
@@ -186,9 +189,11 @@ public class IndexWriter {
 
 	private static void handleTermIndex(long currentDocID, TokenStream tokenStream) {
 		if(tokenStream != null && currentDocID != -1) {
+			long totalTerms = 0;
 			while(tokenStream.hasNext()) {
 				Token token = tokenStream.next();
 				if(Util.isValidString(token.toString())) {
+					totalTerms++;
 					if(termIndex.containsKey(token.toString())) {
 						List<Long> docList = termIndex.get(token.toString());
 						if(!docList.contains(currentDocID)) {
@@ -214,6 +219,10 @@ public class IndexWriter {
 					}
 				}
 			}
+			
+			if(docIDSizeMap.get(currentDocID) == null) {
+				docIDSizeMap.put(currentDocID, totalTerms);
+			}
 		}
 	}
 
@@ -222,15 +231,22 @@ public class IndexWriter {
 			while(tokenStream.hasNext()) {
 				Token token = tokenStream.next();
 				if(token != null && Util.isValidString(token.toString())) {
-					if(authorIndex.containsKey(token.toString())) {
-						List<Long> list = authorIndex.get(token.toString());
-						if(!list.contains(token.toString())) {
+					String [] nameArray = token.toString().split(" ");
+					ArrayList<String> nameList = new ArrayList<String>(Arrays.asList(nameArray));
+					if (nameList.size() > 1){	
+						nameList.add(token.toString());
+					}
+					for (String name : nameList){
+						if(authorIndex.containsKey(name)) {
+							List<Long> list = authorIndex.get(name);
+							if(!list.contains(currentDocID)) {
+								list.add(currentDocID);
+							}
+						} else {
+							List<Long> list = new LinkedList<Long>();
 							list.add(currentDocID);
+							authorIndex.put(name, list);
 						}
-					} else {
-						List<Long> list = new LinkedList<Long>();
-						list.add(currentDocID);
-						authorIndex.put(token.toString(), list);
 					}
 				}
 			}
@@ -366,7 +382,29 @@ public class IndexWriter {
 				}
 				writer.close();
 			}
-
+			
+			if(docIDSizeMap != null) {
+				File docIDSizeFile = new File(indexWriteDir + File.separator + Util.docSizeFIle);
+				docIDSizeFile.getParentFile().mkdir();
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(docIDSizeFile)));
+				Iterator<Entry<Long, Long>> iterator = docIDSizeMap.entrySet().iterator();
+				while(iterator.hasNext()) {
+					Entry<Long, Long> next = iterator.next();
+					writer.write(next.getKey() + Util.dictionaryDelimiter + next.getValue() + "\n");
+				}
+				writer.close();
+			}
+			
+			List<String> rawTermIndex = Util.getRawTermIndex();
+			if(rawTermIndex != null && !rawTermIndex.isEmpty()) {
+				File docIDSizeFile = new File(indexWriteDir + File.separator + Util.rawTermIndexFile);
+				docIDSizeFile.getParentFile().mkdir();
+				writer = new PrintWriter(new BufferedWriter(new FileWriter(docIDSizeFile)));
+				String finalTerms = rawTermIndex.toString();
+				finalTerms = finalTerms.substring(1, finalTerms.lastIndexOf("]")).replace(", ", ",");
+				writer.write(finalTerms);
+				writer.close();
+			}
 		} catch (IOException e) {
 			System.err.println(e);
 		}
